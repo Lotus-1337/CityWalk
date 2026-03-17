@@ -17,6 +17,12 @@ UCLASS()
 class CITYWALK_API ACityAIController : public AAIController
 {
 	GENERATED_BODY()
+
+public:
+
+	ACityAIController();
+
+	~ACityAIController();
 	
 protected:
 
@@ -26,7 +32,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Path Finder")
 	APathFinder* PathFinder;
 
-	TObjectPtr<
+	TUniquePtr<FPortalBuilder> PortalBuilder;
 
 protected:
 

@@ -10,6 +10,10 @@
 FPortalBuilder::FPortalBuilder()
 {
 
+}
+
+FPortalBuilder::~FPortalBuilder()
+{
 
 }
 

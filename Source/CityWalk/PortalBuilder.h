@@ -18,6 +18,8 @@ public:
 	// Sets default values for this actor's properties
 	FPortalBuilder();
 
+	~FPortalBuilder();
+
 	/**
 	* This Method Builds a Portal From Tile's Info
 	* @param TileInfo: Structure containing Tile and 2 Poly Pointers

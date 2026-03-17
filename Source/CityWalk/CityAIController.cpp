@@ -5,7 +5,16 @@
 
 #include "AIActor.h"
 #include "PathFinder.h"
-#include "PathBuilder.h"
+#include "PortalBuilder.h"
+#include "Portal.h"
+
+
+ACityAIController::ACityAIController()
+{
+	PortalBuilder = MakeUnique<FPortalBuilder>();
+}
+
+ACityAIController::~ACityAIController() = default;
 
 void ACityAIController::BeginPlay()
 {
@@ -49,12 +58,23 @@ bool ACityAIController::FindPath(AAIActor* AI, TArray<FVector>& Arr, const FVect
 		return false;
 	}
 
+
+	TArray<FPortal> PortalArray;
+
+	bool DidBuilderSucceed = PortalBuilder->GetPortalPath(PortalArray, PolyArr, PathFinder);
+
+	if (PortalArray.IsEmpty() || !DidBuilderSucceed)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Portal Builder didn't return anything. Empty: %d. Returned: %d"), PortalArray.IsEmpty(), DidBuilderSucceed);
+		return false;
+	}
+
 	Arr.Empty();
 
-	for (FPolyNode& Poly : PolyArr)
+	for (FPortal & Portal : PortalArray)
 	{
 
-		Arr.Add(Poly.GetEntrance());
+		Arr.Add(Portal.GetPortalMiddle());
 
 	}
 
