@@ -1,0 +1,119 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "AIMovementComponent.h"
+
+bool IsNearlyZero(const double& number, const double& epsilon = UE_KINDA_SMALL_NUMBER)
+{
+	return FMath::Abs(number) < epsilon;
+}
+
+// Sets default values for this component's properties
+UAIMovementComponent::UAIMovementComponent()
+{
+	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
+	// off to improve performance if you don't need them.
+	PrimaryComponentTick.bCanEverTick = true;
+
+	// ...
+}
+
+
+// Called when the game starts
+void UAIMovementComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	IsInTheAir = false;
+	
+}
+
+void UAIMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	fDeltaTime = DeltaTime;
+
+	ExecuteFalling();
+
+}
+
+void UAIMovementComponent::ExecuteFalling()
+{
+	Fall();
+
+	FVector ActorLocation = GetOwner()->GetActorLocation();
+	ActorLocation.Z += ZVelocity * fDeltaTime;
+
+	FHitResult Hit;
+
+	GetOwner()->SetActorLocation(ActorLocation, true, &Hit);
+
+	if (IsNearlyZero(Hit.ImpactNormal.Z))
+	{
+		IsInTheAir = true;
+		return;
+	}
+
+	IsInTheAir = false;
+	ZVelocity = 0.0;
+}
+
+void UAIMovementComponent::Jump()
+{
+
+	if (IsInTheAir)
+	{
+		return;
+	}
+
+	ZVelocity += 600;
+
+}
+
+void UAIMovementComponent::Fall()
+{
+
+	if (!IsInTheAir) { return; }
+
+	float FallingMultiplier = 10.0f;
+
+	ZVelocity += -98 * FallingMultiplier * fDeltaTime;
+
+}
+
+void UAIMovementComponent::Move(FVector& MovementVector)
+{
+
+	FVector NewLocation = GetOwner()->GetActorLocation();
+
+	NewLocation.X += MovementVector.X * MovementSpeed * fDeltaTime;
+	NewLocation.Y += MovementVector.Y * MovementSpeed * fDeltaTime;
+
+	FHitResult Hit;
+
+	bool bDidSucceed = GetOwner()->SetActorLocation(NewLocation, true, &Hit);
+
+	if (bDidSucceed) // if the move was succesfull, we're returning
+	{
+		return ;
+	}
+
+	NewLocation += Hit.ImpactNormal;
+
+	GetOwner()->SetActorLocation(NewLocation, true, &Hit);
+
+}
+
+void UAIMovementComponent::Rotate(const FRotator& NewRotation)
+{
+
+	FRotator Rotation = NewRotation;
+
+	Rotation.Pitch = 0.0f;
+	Rotation.Roll = 0.0f;
+
+	GetOwner()->SetActorRotation(Rotation);
+
+}
