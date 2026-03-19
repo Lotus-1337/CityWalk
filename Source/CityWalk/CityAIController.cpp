@@ -58,6 +58,7 @@ bool ACityAIController::FindPath(AAIActor* AI, TArray<FVector>& Arr, const FVect
 		return false;
 	}
 
+	UE_LOG(LogTemp, Log, TEXT("Poly Array Num: %d"), PolyArr.Num());
 
 	TArray<FPortal> PortalArray;
 

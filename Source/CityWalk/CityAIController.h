@@ -4,15 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+
+#include "PortalBuilder.h"
+
 #include "CityAIController.generated.h"
+
 
 class APathFinder;
 class AAIActor;
 class FPortalBuilder;
 
 /**
- * 
- */
+* AI Controller Receiving PathFinding Requests and running PathFinding, Portal Building and Funnel Algorithms * 
+*/
 UCLASS()
 class CITYWALK_API ACityAIController : public AAIController
 {
@@ -32,6 +36,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Path Finder")
 	APathFinder* PathFinder;
 
+	/** Object responsible for building Portal Paths **/
 	TUniquePtr<FPortalBuilder> PortalBuilder;
 
 protected:
