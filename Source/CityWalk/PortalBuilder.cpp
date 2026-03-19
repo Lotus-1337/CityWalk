@@ -4,6 +4,7 @@
 #include "PortalBuilder.h"
 
 #include "Portal.h"
+#include "PFHelper.h"
 #include "PathFinder.h"
 
 // Sets default values
@@ -17,10 +18,10 @@ FPortalBuilder::~FPortalBuilder()
 
 }
 
-FPortal FPortalBuilder::BuildPortal(FTileInfo* TileInfo)
+FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 {
 
-	if (!ValidateTileInfo(TileInfo))
+	if (!ValidatePolyInfo(PolyInfo))
 	{
 		return FPortal();
 	}
@@ -31,7 +32,7 @@ FPortal FPortalBuilder::BuildPortal(FTileInfo* TileInfo)
 	for (int i = 0; i < DT_VERTS_PER_POLYGON; i++)
 	{
 
-		unsigned short NeighbourIndex = TileInfo->MainPoly->neis[i];
+		unsigned short NeighbourIndex = PolyInfo->MainHandle.Poly->neis[i];
 
 		if (NeighbourIndex == 0)
 		{
@@ -40,23 +41,23 @@ FPortal FPortalBuilder::BuildPortal(FTileInfo* TileInfo)
 
 		if (NeighbourIndex & DT_EXT_LINK) // is the neighbour index outside of current tile? more expensive calculations
 		{
-			Neighbour = FPortalBuilder::GetPolyOutsideTile(TileInfo);
+			Neighbour = FPortalBuilder::GetPolyOutsideTile(PolyInfo, i);
 		}
 		else
 		{
-			Neighbour = &TileInfo->Tile->polys[NeighbourIndex - 1];
+			Neighbour = &PolyInfo->Tile->polys[NeighbourIndex - 1];
 		}
 
-		if (Neighbour != TileInfo->OtherPoly)
+		if (Neighbour != PolyInfo->OtherHandle.Poly)
 		{
 			continue;
 		}
 
-		int32 VertIndex0 = TileInfo->MainPoly->verts[i];
-		int32 VertIndex1 = TileInfo->MainPoly->verts[(i + 1) % TileInfo->MainPoly->vertCount];
+		int32 VertIndex0 = PolyInfo->MainHandle.Poly->verts[i];
+		int32 VertIndex1 = PolyInfo->MainHandle.Poly->verts[(i + 1) % PolyInfo->MainHandle.Poly->vertCount];
 
-		FVector V0 = RealToVector(&TileInfo->Tile->verts[VertIndex0 * 3]);
-		FVector V1 = RealToVector(&TileInfo->Tile->verts[VertIndex1 * 3]);
+		FVector V0 = RealToVector(&PolyInfo->Tile->verts[VertIndex0 * 3]);
+		FVector V1 = RealToVector(&PolyInfo->Tile->verts[VertIndex1 * 3]);
 
 		return FPortal(V1, V0);
 
@@ -69,24 +70,32 @@ FPortal FPortalBuilder::BuildPortal(FTileInfo* TileInfo)
 
 }
 
-const dtPoly * FPortalBuilder::GetPolyOutsideTile(const FTileInfo* TileInfo)
+const dtPoly * FPortalBuilder::GetPolyOutsideTile(FPolyInfo* PolyInfo, const int32 &Index)
 {
 
-	for (unsigned int i = TileInfo->MainPoly->firstLink; i != DT_NULL_LINK; i = TileInfo->Tile->links[i].next)
+	for (unsigned int i = PolyInfo->MainHandle.Poly->firstLink; i != DT_NULL_LINK; i = PolyInfo->Tile->links[i].next)
 	{
 
-		dtPolyRef Ref = TileInfo->Tile->links[i].ref;
+		const dtLink& Link = PolyInfo->Tile->links[i];
+
+		// if the edge is not equal to the current iteration of Poly::neis[]
+		// if they're equal then we found the neighbour.
+		if (Link.edge != Index) 
+		{
+			continue;
+		}
+
+		dtPolyRef Ref = Link.ref;
 
 		const dtPoly* Poly = nullptr;
 
 		const dtMeshTile* Tile = nullptr;
 
-		TileInfo->Mesh->getTileAndPolyByRef(Ref, &Tile, &Poly);
+		PolyInfo->Mesh->getTileAndPolyByRef(Ref, &Tile, &Poly);
 
-		if (Poly == TileInfo->OtherPoly)
-		{
-			return Poly;
-		}
+		PolyInfo->OtherHandle = FPolyHandle(Ref, Poly);
+	
+		return Poly;
 
 	}
 
@@ -104,6 +113,12 @@ bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode
 		UE_LOG(LogTemp, Error, TEXT("PathFinder is Invalid. Cannot Build Portals Path"));
 		return false;
 
+	}
+
+	if (NodeArray.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Given Node Array Is Empty. "));
+		return false;
 	}
 
 	if (!PortalPath.IsEmpty())
@@ -126,21 +141,26 @@ bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode
 	for (int32 i = 0; i < NodeArray.Num() - 1; i++)
 	{
 
+		UE_LOG(LogTemp, Log, TEXT("Iteration %d"), i);
+
 		CurrNode = &NodeArray[i];
 		NextNode = &NodeArray[i + 1];
 
 		DetourNavMesh->getTileAndPolyByRef(CurrNode->GetRef(), &Tile, &NodePoly);
 		DetourNavMesh->getTileAndPolyByRef(NextNode->GetRef(), &NeighbourTile, &NeighbourPoly);
 
-		FTileInfo TileInfo = FTileInfo(NodePoly, NeighbourPoly, Tile, DetourNavMesh);
+		FPolyHandle MainHandle  = FPolyHandle(CurrNode->GetRef(), NodePoly);
+		FPolyHandle OtherHandle = FPolyHandle(NextNode->GetRef(), NeighbourPoly);
 
-		if (!TileInfo.IsValid())
+		FPolyInfo PolyInfo = FPolyInfo(MainHandle, OtherHandle, Tile, DetourNavMesh);
+
+		if (!PolyInfo.IsValid())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Tile Info Is invalid. Might Implement FTInfoStatus"));
 			continue;
 		}
 
-		PortalPath.Add(FPortalBuilder::BuildPortal(&TileInfo));
+		PortalPath.Add(FPortalBuilder::BuildPortal(&PolyInfo));
 
 	}
 
@@ -148,25 +168,25 @@ bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode
 
 }
 
-bool FPortalBuilder::ValidateTileInfo(const FTileInfo* TileInfo)
+bool FPortalBuilder::ValidatePolyInfo(const FPolyInfo* PolyInfo)
 {
 
-	if (!TileInfo)
+	if (!PolyInfo)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Tile Info Is nullptr. "));
 		return false;
 	}
-	if (!TileInfo->MainPoly || !TileInfo->OtherPoly)
+	if (!PolyInfo->MainHandle.IsPolyValid() || !PolyInfo->OtherHandle.IsPolyValid())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Either Main or OtherPoly is nullptr.  "));
 		return false;
 	}
-	if (!TileInfo->Tile)
+	if (!PolyInfo->Tile)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Tile is nullptr. "));
 		return false;
 	}
-	if (!TileInfo->Mesh)
+	if (!PolyInfo->Mesh)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Mesh is nullptr. "));
 		return false;

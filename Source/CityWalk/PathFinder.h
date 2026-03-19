@@ -26,6 +26,7 @@ public:
 	{
 		Entrance = FVector::ZeroVector;
 		Ref = 0;
+		ParentRef = 0;
 	}
 
 protected:
@@ -39,8 +40,7 @@ protected:
 	int32 G = 1e10;
 	int32 F = 0;
 
-	int32 ParentIndex = -1;
-	int32 Index = -1;
+	dtPolyRef ParentRef;
 
 public:
 
@@ -62,7 +62,11 @@ public:
 
 	FORCEINLINE int32 GetG() const { return G; };
 
-	FORCEINLINE void SetF() { F = G + H; };
+	/**
+	* Claculates F Cost ( Total Cost: G + H )
+	* @param Weight: Heuretic Multiplier in F = G + H Equasion, higher values might speed up the algorithm, generating worse paths
+	**/
+	FORCEINLINE void SetF(const float &Weight = 1.0f) { F = G + (H * Weight ); };
 
 	FORCEINLINE void SetG(const int32& NewG) { G = NewG; };
 
@@ -70,17 +74,11 @@ public:
 
 	// Index Stuff
 
-	FORCEINLINE bool IsIndexValid() { return Index != 1; };
+	FORCEINLINE bool IsParentRefValid() const { return ParentRef != 0; };
 
-	FORCEINLINE bool IsParentIdexValid() { return ParentIndex != -1; };
+	FORCEINLINE dtPolyRef GetParentRef() const { return ParentRef; };
 
-	FORCEINLINE int32 GetIndex() { return Index; };
-
-	FORCEINLINE int32 GetParentIndex() { return ParentIndex; };
-
-	FORCEINLINE void SetIndex(const int32& NewIndex) { Index = NewIndex; };
-
-	FORCEINLINE void SetParentIndex(const int32& NewIndex) { ParentIndex = NewIndex; };
+	FORCEINLINE void SetParentRef(const dtPolyRef& NewRef) { ParentRef = NewRef; };
 
 };
 
@@ -173,7 +171,7 @@ public:
 
 	
 
-	void GetNeighbours(TArray<dtPolyRef> &NeighboursArr, dtPolyRef* Poly);
+	void GetNeighbours(TArray<FPolyNode> &NeighboursArr, dtPolyRef* Poly);
 
 	FORCEINLINE TArray<FPolyNode> GetEmptyArray() const
 	{

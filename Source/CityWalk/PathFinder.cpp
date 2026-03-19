@@ -10,6 +10,7 @@
 
 #include "PortalBuilder.h"
 #include "Portal.h"
+#include "PFHelper.h"
 
 FVector FPolyNode::CalculateCenter(const APathFinder* PathFinder) 
 { 
@@ -71,7 +72,7 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 		GetEmptyArray();
 	}
 
-	FVector DefaultExtent = FVector(200.0f, 200.0f, 200.0f);
+	FVector DefaultExtent = FVector(200.0f, 200.0f, 1000.0f);
 
 	dtPolyRef FirstPolyRef = 0;
 	dtPolyRef LastPolyRef = 0;
@@ -82,11 +83,6 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 	GetClosestPoly(StartPoly, StartingPosition, DefaultExtent);
 	GetClosestPoly(EndPoly, FinishPosition, DefaultExtent);
 
-	if (!StartPoly || !EndPoly)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Either Start Poly or End Poly is NULLPOINTER BLYAT'"));
-		return GetEmptyArray();
-	}
 
 	bool IsStartValid = *StartPoly != 0;
 	bool IsEndValid   = *EndPoly   != 0;
@@ -108,7 +104,7 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 	AddPolyToMap(*StartPoly, *CurrentNode);
 	AddPolyToMap(*EndPoly, *EndNode);
 
-	TArray<dtPolyRef> NeighboursArr;
+	TArray<FPolyNode> NeighboursArr;
 
 	TArray<FPolyNode*> OpenArr;
 	TArray<FPolyNode*> OpenSet;
@@ -125,7 +121,7 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 
 		OpenArr.HeapPop(CurrentNode, FCompareNodes());
 
-		if (CurrentNode->GetRef() == EndNode->GetRef() || CurrentNode->GetIndex() == EndNode->GetIndex())
+		if (CurrentNode->GetRef() == EndNode->GetRef() || CurrentNode->GetRef() == EndNode->GetRef())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
 			return ReconstructPath(CurrentNode);
@@ -138,46 +134,40 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 
 		GetNeighbours(NeighboursArr, &Ref);
 
-		for (dtPolyRef& NeighbourRef : NeighboursArr)
+		for (FPolyNode& Neighbour : NeighboursArr)
 		{
 
-			FPolyNode *Neighbour = PolyMap.Find(NeighbourRef);
-
-			if (!Neighbour)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Neighbour is nullptr. "));
-				continue;
-			}
-
-			if (ClosedSet.Contains(Neighbour))
+			if (ClosedSet.Contains(&Neighbour))
 			{
 				continue;
 			}
 
-			bool IsInOpen = OpenSet.Contains(Neighbour);
+			bool IsInOpen = OpenSet.Contains(&Neighbour);
 
-			int32 NewG = CurrentNode->GetG() + FVector::Dist2D(CurrentNode->GetEntrance(), Neighbour->GetEntrance());
+			int32 NewG = CurrentNode->GetG() + FVector::Dist2D(CurrentNode->GetEntrance(), Neighbour.GetEntrance());
 
-			if (IsInOpen && NewG > Neighbour->GetG())
+			if (IsInOpen && NewG > Neighbour.GetG())
 			{
 				continue;
 			}
 
 			if (IsInOpen)
 			{
-				OpenArr.Remove(Neighbour);
+				OpenArr.Remove(&Neighbour);
 				OpenArr.Heapify(FCompareNodes());
 			}
 
-			Neighbour->SetG(NewG);
-			Neighbour->SetH(FinishPosition);
+			Neighbour.SetG(NewG);
+			Neighbour.SetH(FinishPosition);
 
-			Neighbour->SetF();
+			static const float Weight = 1.1f;
 
-			Neighbour->SetParentIndex(CurrentNode->GetIndex());
+			Neighbour.SetF(Weight);
 
-			OpenArr.HeapPush(Neighbour, FCompareNodes());
-			OpenSet.Add(Neighbour);
+			Neighbour.SetParentRef(CurrentNode->GetRef());
+
+			OpenArr.HeapPush(&Neighbour, FCompareNodes());
+			OpenSet.Add(&Neighbour);
 
 		}
 
@@ -199,9 +189,9 @@ TArray<FPolyNode> APathFinder::ReconstructPath(FPolyNode* LastNode)
 
 		Array.Add(*CurrNode);
 
-		if (CurrNode->IsParentIdexValid() && PolyMap.Contains(CurrNode->GetParentIndex()))
+		if (CurrNode->IsParentRefValid() && PolyMap.Contains(CurrNode->GetParentRef()))
 		{
-			CurrNode = &PolyMap[CurrNode->GetParentIndex()];
+			CurrNode = &PolyMap[CurrNode->GetParentRef()];
 		
 			continue;
 		}
@@ -266,8 +256,11 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 
 	dtQueryFilter QueryFilter;
 
-	dtReal Center[3] = { Location.X, Location.Y, Location.Z };
-	dtReal ExtentReal[3] = { Extent.X, Extent.Y, Extent.Z };
+	dtReal Center[3];
+	dtReal ExtentReal[3];
+
+	VectorToReal(Location, Center);
+	VectorToReal(Extent, ExtentReal);
 
 	dtStatus Status = Query.findNearestPoly(Center, ExtentReal, &QueryFilter, Poly, nullptr);
 
@@ -275,12 +268,12 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 
 	if (!dtStatusSucceed(Status) || *Poly == 0)
 	{
-		Poly = nullptr;
+		*Poly = 0;
 	}
 
 }
 
-void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, dtPolyRef* PolyRef)
+void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* PolyRef)
 {
 
 	if (!NeighboursArr.IsEmpty())
@@ -298,7 +291,13 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, dtPolyRef* Pol
 		return;
 	}
 
-	DetourMesh->getTileAndPolyByRef(*PolyRef, &Tile, &Poly);
+	dtStatus Status = DetourMesh->getTileAndPolyByRef(*PolyRef, &Tile, &Poly);
+
+	if (!dtStatusSucceed(Status))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Status Hasn't Succeeded. "));
+		return;
+	}
 
 	if (!Poly)
 	{
@@ -312,34 +311,46 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, dtPolyRef* Pol
 		return;
 	}
 
-	for (unsigned int i = Poly->firstLink; i != DT_NULL_LINK; i = Tile->links[i].next)
+
+	FPolyHandle MainHandle = FPolyHandle(*PolyRef, Poly);
+	FPolyHandle OtherHandle = FPolyHandle(); // Other Handle HAS to be invalid for now
+
+	FPolyInfo PolyInfo = FPolyInfo(MainHandle, OtherHandle, Tile, DetourMesh);
+
+	const dtPoly* Neighbour = nullptr;
+
+	dtPolyRef NeighbourRef = 0;
+
+	for (int i = 0; i < DT_VERTS_PER_POLYGON; i++)
 	{
 
-		dtPolyRef NeighbourRef = Tile->links[i].ref;
+		unsigned short NeighbourIndex = PolyInfo.MainHandle.Poly->neis[i];
 
-		const dtPoly* NeighbourPoly = nullptr;
-		const dtMeshTile* OtherTile = nullptr;
-
-		DetourMesh->getTileAndPolyByRef(NeighbourRef, &OtherTile, &NeighbourPoly);
-
-		FTileInfo TileInfo = FTileInfo(Poly, NeighbourPoly, Tile, DetourMesh);
-
-
-		FPortal Portal = FPortalBuilder::BuildPortal(&TileInfo); // Uncomment as soon as BuildPortal is implemented 
-
-		NeighboursArr.Add(NeighbourRef);
-
-		if (PolyMap.Contains(NeighbourRef))
+		if (NeighbourIndex == 0)
 		{
 			continue;
 		}
 
+		if (NeighbourIndex & DT_EXT_LINK) // is the neighbour index outside of current tile? more expensive calculations
+		{
+			Neighbour = FPortalBuilder::GetPolyOutsideTile(&PolyInfo, i);
+		}
+		else
+		{
+			Neighbour = &PolyInfo.Tile->polys[NeighbourIndex - 1];
+		}
+
+		NeighbourRef = DetourMesh->getPolyRefBase(Tile) + int(Neighbour - Tile->polys);
+
+		FPortal Portal = FPortalBuilder::BuildPortal(&PolyInfo); // Uncomment as soon as BuildPortal is implemented 
 		FPolyNode NeighbourPolyNode = FPolyNode();
 
 		NeighbourPolyNode.SetEntrance(Portal.GetPortalMiddle());
+		NeighbourPolyNode.SetRef(NeighbourRef);
 
+		NeighboursArr.Add(NeighbourPolyNode);
 		AddPolyToMap(NeighbourRef, NeighbourPolyNode);
-
+	
 	}
 
 }
@@ -368,12 +379,6 @@ void APathFinder::AddPolyToMap(dtPolyRef& Ref, FPolyNode& Node)
 	{
 		return;
 	}
-
-	int32 Index = PolyMap.Num();
-
-	InitNode(Ref, Node);
-
-	Node.SetIndex(Index);
 
 	PolyMap.Add(Ref, Node);
 
