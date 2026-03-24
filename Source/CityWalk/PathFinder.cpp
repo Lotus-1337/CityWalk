@@ -340,7 +340,14 @@ void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* Pol
 			Neighbour = &PolyInfo.Tile->polys[NeighbourIndex - 1];
 		}
 
+		PolyInfo.OtherHandle = FPolyHandle(0, Neighbour);
+
+
 		NeighbourRef = GetPolyRef(PolyInfo, EWhichHandle::OTHER);
+
+		if (NeighbourRef == 0) continue;
+
+		PolyInfo.OtherHandle.Ref = NeighbourRef;
 
 		FPortal Portal = FPortalBuilder::BuildPortal(&PolyInfo); // Uncomment as soon as BuildPortal is implemented 
 		FPolyNode NeighbourPolyNode = FPolyNode();
