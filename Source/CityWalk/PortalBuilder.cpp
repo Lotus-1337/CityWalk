@@ -73,6 +73,17 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 const dtPoly * FPortalBuilder::GetPolyOutsideTile(FPolyInfo* PolyInfo, const int32 &Index)
 {
 
+	if (!ValidatePolyInfo(PolyInfo, false))
+	{
+		UE_LOG(LogTemp, Error, TEXT("PolyInfo IsInvalid. FPortalBuilder::GetPolyOutsideTile"));
+		return nullptr;
+	}
+	if (!PolyInfo->Tile->header)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Tile Header Is Invalid. FPortalBuilder::GetPolyOutsideTile"));
+		return 0;
+	}
+
 	for (unsigned int i = PolyInfo->MainHandle.Poly->firstLink; i != DT_NULL_LINK; i = PolyInfo->Tile->links[i].next)
 	{
 
@@ -88,18 +99,53 @@ const dtPoly * FPortalBuilder::GetPolyOutsideTile(FPolyInfo* PolyInfo, const int
 		dtPolyRef Ref = Link.ref;
 
 		const dtPoly* Poly = nullptr;
-
 		const dtMeshTile* Tile = nullptr;
 
 		PolyInfo->Mesh->getTileAndPolyByRef(Ref, &Tile, &Poly);
-
-		PolyInfo->OtherHandle = FPolyHandle(Ref, Poly);
 	
 		return Poly;
 
 	}
 
+	UE_LOG(LogTemp, Error, TEXT("The Said Neighbour of Index: %d Has not been Found. FPortalBuilder::GetPolyOutsideTile"), Index);
+
 	return nullptr;
+
+}
+
+const dtPolyRef FPortalBuilder::GetRefOutsideTile(FPolyInfo* PolyInfo, const int32& Index)
+{
+
+	if (!ValidatePolyInfo(PolyInfo, false))
+	{
+		UE_LOG(LogTemp, Error, TEXT("PolyInfo IsInvalid. FPortalBuilder::GetRefOutsideTile"));
+		return 0;
+	}
+	if (!PolyInfo->Tile->header)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Tile Header Is Invalid. FPortalBuilder::GetRefOutsideTile"));
+		return 0;
+	}
+
+	for (unsigned int i = PolyInfo->MainHandle.Poly->firstLink; i != DT_NULL_LINK; i = PolyInfo->Tile->links[i].next)
+	{
+
+		const dtLink& Link = PolyInfo->Tile->links[i];
+
+		// if the edge is not equal to the current iteration of Poly::neis[]
+		// if they're equal then we found the neighbour.
+		if (Link.edge != Index)
+		{
+			continue;
+		}
+
+		return Link.ref;
+
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("The Said Neighbour of Index: %d Has not been Found. FPortalBuilder::GetRefOutsideTile"), Index);
+
+	return 0;
 
 }
 
@@ -168,7 +214,7 @@ bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode
 
 }
 
-bool FPortalBuilder::ValidatePolyInfo(const FPolyInfo* PolyInfo)
+bool FPortalBuilder::ValidatePolyInfo(const FPolyInfo* PolyInfo, const bool& ShouldCheckOtherHandle)
 {
 
 	if (!PolyInfo)
@@ -176,7 +222,7 @@ bool FPortalBuilder::ValidatePolyInfo(const FPolyInfo* PolyInfo)
 		UE_LOG(LogTemp, Error, TEXT("Tile Info Is nullptr. "));
 		return false;
 	}
-	if (!PolyInfo->MainHandle.IsPolyValid() || !PolyInfo->OtherHandle.IsPolyValid())
+	if (!PolyInfo->MainHandle.IsPolyValid() || (ShouldCheckOtherHandle && !PolyInfo->OtherHandle.IsPolyValid()))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Either Main or OtherPoly is nullptr.  "));
 		return false;

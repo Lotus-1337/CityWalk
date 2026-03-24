@@ -83,7 +83,6 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 	GetClosestPoly(StartPoly, StartingPosition, DefaultExtent);
 	GetClosestPoly(EndPoly, FinishPosition, DefaultExtent);
 
-
 	bool IsStartValid = *StartPoly != 0;
 	bool IsEndValid   = *EndPoly   != 0;
 
@@ -105,10 +104,9 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 	AddPolyToMap(*EndPoly, *EndNode);
 
 	TArray<FPolyNode> NeighboursArr;
-
+	
 	TArray<FPolyNode*> OpenArr;
 	TArray<FPolyNode*> OpenSet;
-
 	TArray<FPolyNode*> ClosedSet;
 
 	OpenArr.Heapify(FCompareNodes());
@@ -136,7 +134,7 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 
 		for (FPolyNode& Neighbour : NeighboursArr)
 		{
-
+			
 			if (ClosedSet.Contains(&Neighbour))
 			{
 				continue;
@@ -145,7 +143,7 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 			bool IsInOpen = OpenSet.Contains(&Neighbour);
 
 			int32 NewG = CurrentNode->GetG() + FVector::Dist2D(CurrentNode->GetEntrance(), Neighbour.GetEntrance());
-
+	
 			if (IsInOpen && NewG > Neighbour.GetG())
 			{
 				continue;
@@ -318,6 +316,7 @@ void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* Pol
 	FPolyInfo PolyInfo = FPolyInfo(MainHandle, OtherHandle, Tile, DetourMesh);
 
 	const dtPoly* Neighbour = nullptr;
+	const dtMeshTile* NeighbourTile = nullptr;
 
 	dtPolyRef NeighbourRef = 0;
 
@@ -333,23 +332,24 @@ void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* Pol
 
 		if (NeighbourIndex & DT_EXT_LINK) // is the neighbour index outside of current tile? more expensive calculations
 		{
-			Neighbour = FPortalBuilder::GetPolyOutsideTile(&PolyInfo, i);
+			NeighbourRef = FPortalBuilder::GetRefOutsideTile(&PolyInfo, i);
+			DetourMesh->getTileAndPolyByRef(NeighbourRef, &NeighbourTile, &Neighbour);
 		}
 		else
 		{
 			Neighbour = &PolyInfo.Tile->polys[NeighbourIndex - 1];
+
+			PolyInfo.OtherHandle = FPolyHandle(0, Neighbour);
+
+			NeighbourRef = GetPolyRef(PolyInfo, EWhichHandle::OTHER);
 		}
-
-		PolyInfo.OtherHandle = FPolyHandle(0, Neighbour);
-
-
-		NeighbourRef = GetPolyRef(PolyInfo, EWhichHandle::OTHER);
 
 		if (NeighbourRef == 0) continue;
 
 		PolyInfo.OtherHandle.Ref = NeighbourRef;
+		PolyInfo.OtherHandle.Poly = Neighbour;
 
-		FPortal Portal = FPortalBuilder::BuildPortal(&PolyInfo); // Uncomment as soon as BuildPortal is implemented 
+		FPortal Portal = FPortalBuilder::BuildPortal(&PolyInfo);
 		FPolyNode NeighbourPolyNode = FPolyNode();
 
 		NeighbourPolyNode.SetEntrance(Portal.GetPortalMiddle());

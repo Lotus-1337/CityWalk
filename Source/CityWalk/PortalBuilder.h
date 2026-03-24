@@ -10,6 +10,9 @@ struct FPolyInfo;
 struct dtPoly;
 class APathFinder;
 
+typedef uint64_t UEType_uint64;
+typedef UEType_uint64 dtPolyRef;
+
 class CITYWALK_API FPortalBuilder
 {
 	
@@ -31,18 +34,32 @@ public:
 	* 
 	* This method of searching for the Poly is significantly slower 
 	* 
-	* Warning! Changes FPolyInfo::OtherHandle
-	* 
 	* @param PolyInfo: Structure containing Tile and 2 Poly Handles necessary for getting the Neighbour by dtPoly::links[] 
 	* 
 	* @param Index: We can check if we found the right link if link.edge == Index
+	* 
 	* @return Neighbouring Poly if Found
-	* This method of searching for the Poly is significantly slower  */
+	*/
 	static const dtPoly* GetPolyOutsideTile(FPolyInfo* PolyInfo, const int32 & Index);
+
+	/**
+	* If the neighbour is outside the current tile, it's searched in other tiles
+	* 
+	* This Version Returns Neighbour's Ref
+	*
+	* This method of searching for the Poly is significantly slower
+	*
+	* @param PolyInfo: Structure containing Tile and 2 Poly Handles necessary for getting the Neighbour by dtPoly::links[]
+	*
+	* @param Index: We can check if we found the right link if link.edge == Index
+	*
+	* @return Neighbouring PolyRef if Found
+	*/
+	static const dtPolyRef GetRefOutsideTile(FPolyInfo* PolyInfo, const int32& Index);
 
 	bool GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode>& NodeArray, const APathFinder* PathFinder);
 
-	static bool ValidatePolyInfo(const FPolyInfo* PolyInfo);
+	static bool ValidatePolyInfo(const FPolyInfo* PolyInfo, const bool& ShouldCheckOtherHandle = true);
 	
 };
 
