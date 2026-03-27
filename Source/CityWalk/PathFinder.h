@@ -171,7 +171,7 @@ public:
 
 	
 
-	void GetNeighbours(TArray<FPolyNode> &NeighboursArr, dtPolyRef* Poly);
+	void GetNeighbours(TArray<dtPolyRef> &NeighboursArr, dtPolyRef& Poly);
 
 	FORCEINLINE TArray<FPolyNode> GetEmptyArray() const
 	{

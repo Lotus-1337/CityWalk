@@ -113,7 +113,7 @@ const dtPoly * FPortalBuilder::GetPolyOutsideTile(FPolyInfo* PolyInfo, const int
 
 }
 
-const dtPolyRef FPortalBuilder::GetRefOutsideTile(FPolyInfo* PolyInfo, const int32& Index)
+const dtPolyRef FPortalBuilder::GetRefOutsideTile(const FPolyInfo* PolyInfo, const int32& Index)
 {
 
 	if (!ValidatePolyInfo(PolyInfo, false))

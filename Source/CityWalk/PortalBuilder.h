@@ -55,7 +55,7 @@ public:
 	*
 	* @return Neighbouring PolyRef if Found
 	*/
-	static const dtPolyRef GetRefOutsideTile(FPolyInfo* PolyInfo, const int32& Index);
+	static const dtPolyRef GetRefOutsideTile(const FPolyInfo* PolyInfo, const int32& Index);
 
 	bool GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode>& NodeArray, const APathFinder* PathFinder);
 

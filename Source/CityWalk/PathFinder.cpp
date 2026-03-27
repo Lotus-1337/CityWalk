@@ -77,16 +77,16 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 	dtPolyRef FirstPolyRef = 0;
 	dtPolyRef LastPolyRef = 0;
 
-	dtPolyRef* StartPoly = &FirstPolyRef; 
-	dtPolyRef* EndPoly = &LastPolyRef;
+	dtPolyRef* StartRef = &FirstPolyRef; 
+	dtPolyRef* EndRef = &LastPolyRef;
 
-	GetClosestPoly(StartPoly, StartingPosition, DefaultExtent);
-	GetClosestPoly(EndPoly, FinishPosition, DefaultExtent);
+	GetClosestPoly(StartRef, StartingPosition, DefaultExtent);
+	GetClosestPoly(EndRef, FinishPosition, DefaultExtent);
 
-	bool IsStartValid = *StartPoly != 0;
-	bool IsEndValid   = *EndPoly   != 0;
+	bool IsStartValid = *StartRef != 0;
+	bool IsEndValid   = *EndRef   != 0;
 
-	UE_LOG(LogTemp, Warning, TEXT("Start ( %llu ) End ( %llu ). Start Valid %d, End Valid %d"), *StartPoly, *EndPoly, IsStartValid, IsEndValid);
+	UE_LOG(LogTemp, Warning, TEXT("Start ( %llu ) End ( %llu ). Start Valid %d, End Valid %d"), *StartRef, *EndRef, IsStartValid, IsEndValid);
 
 	if (!IsStartValid || !IsEndValid)
 	{
@@ -94,82 +94,125 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 		return GetEmptyArray();
 	}
 
-	FPolyNode StartNode = BuildNode(*StartPoly);
-	FPolyNode LastNode = BuildNode(*EndPoly);
+	FPolyNode StartNode;
+	StartNode.SetEntrance(StartingPosition);
+	StartNode.SetG(0);
+	StartNode.SetRef(*StartRef);
+	AddPolyToMap(*StartRef, StartNode);
 
-	FPolyNode* CurrentNode = &StartNode;
-	FPolyNode* EndNode = &LastNode;
+	FPolyNode LastNode;
+	LastNode.SetEntrance(FinishPosition);
+	LastNode.SetG(0);
+	LastNode.SetRef(*EndRef);
+	AddPolyToMap(*EndRef, LastNode);
 
-	AddPolyToMap(*StartPoly, *CurrentNode);
-	AddPolyToMap(*EndPoly, *EndNode);
+	TArray<dtPolyRef> NeighboursArray;
 
-	TArray<FPolyNode> NeighboursArr;
-	
-	TArray<FPolyNode*> OpenArr;
-	TArray<FPolyNode*> OpenSet;
-	TArray<FPolyNode*> ClosedSet;
+	GetNeighbours(NeighboursArray, *StartRef);
 
-	OpenArr.Heapify(FCompareNodes());
+	int32 Index = 0;
 
-	OpenArr.HeapPush(CurrentNode, FCompareNodes());
-	OpenSet.Add(CurrentNode);
-
-	while (!OpenArr.IsEmpty())
+	for (dtPolyRef& NeiRef : NeighboursArray)
 	{
 
-		OpenArr.HeapPop(CurrentNode, FCompareNodes());
+		FPolyNode* Neighbour = PolyMap.Find(NeiRef);
 
-		if (CurrentNode->GetRef() == EndNode->GetRef() || CurrentNode->GetRef() == EndNode->GetRef())
+		if (!Neighbour)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
-			return ReconstructPath(CurrentNode);
+			UE_LOG(LogTemp, Error, TEXT("APathFinder::FindPath : Neighbour is nullptr. "));
+			continue;
 		}
 
-		ClosedSet.Add(CurrentNode);
-		OpenSet.Remove(CurrentNode);
-
-		dtPolyRef Ref = CurrentNode->GetRef(); // GetRef() returns an rvalue ( one that is not in the memory )
-
-		GetNeighbours(NeighboursArr, &Ref);
-
-		for (FPolyNode& Neighbour : NeighboursArr)
-		{
-			
-			if (ClosedSet.Contains(&Neighbour))
-			{
-				continue;
-			}
-
-			bool IsInOpen = OpenSet.Contains(&Neighbour);
-
-			int32 NewG = CurrentNode->GetG() + FVector::Dist2D(CurrentNode->GetEntrance(), Neighbour.GetEntrance());
-	
-			if (IsInOpen && NewG > Neighbour.GetG())
-			{
-				continue;
-			}
-
-			if (IsInOpen)
-			{
-				OpenArr.Remove(&Neighbour);
-				OpenArr.Heapify(FCompareNodes());
-			}
-
-			Neighbour.SetG(NewG);
-			Neighbour.SetH(FinishPosition);
-
-			static const float Weight = 1.1f;
-
-			Neighbour.SetF(Weight);
-
-			Neighbour.SetParentRef(CurrentNode->GetRef());
-
-			OpenArr.HeapPush(&Neighbour, FCompareNodes());
-			OpenSet.Add(&Neighbour);
-
-		}
+		UE_LOG(LogTemp, Log, TEXT("Neighbour Index: %d"), Index);
 
 	}
+
+
+
+	//FPolyNode* CurrentNode = PolyMap.Find(*StartRef);
+	//FPolyNode* EndNode = PolyMap.Find(*EndRef);
+
+	//TArray<dtPolyRef> NeighboursArr;
+	//
+	//TArray<FPolyNode*> OpenArr;
+	//TArray<FPolyNode*> OpenSet;
+	//TArray<FPolyNode*> ClosedSet;
+
+	//OpenArr.Heapify(FCompareNodes());
+
+	//OpenArr.HeapPush(CurrentNode, FCompareNodes());
+	//OpenSet.Add(CurrentNode);
+
+	//int32 Iterations = 0;
+
+	//while (!OpenArr.IsEmpty())
+	//{
+
+	//	OpenArr.HeapPop(CurrentNode, FCompareNodes());
+
+	//	if (CurrentNode->GetRef() == EndNode->GetRef() || CurrentNode->GetRef() == EndNode->GetRef())
+	//	{
+	//		UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
+	//		return ReconstructPath(CurrentNode);
+	//	}
+
+	//	ClosedSet.Add(CurrentNode);
+	//	OpenSet.Remove(CurrentNode);
+
+	//	dtPolyRef Ref = CurrentNode->GetRef(); // GetRef() returns an rvalue ( one that is not in the memory )
+
+	//	GetNeighbours(NeighboursArr, &Ref);
+
+	//	for (dtPolyRef& NeighbourRef : NeighboursArr)
+	//	{
+
+	//		Iterations++;
+
+	//		FPolyNode *Neighbour = PolyMap.Find(NeighbourRef);
+
+	//		if (!Neighbour)
+	//		{
+	//			UE_LOG(LogTemp, Error, TEXT("APathFinder::FindPath: A Neighbour in NeighboursArray was not found in PolyMap. "));
+	//			continue;
+	//		}
+	//		
+	//		if (ClosedSet.Contains(Neighbour))
+	//		{
+	//			continue;
+	//		}
+
+	//		bool IsInOpen = OpenSet.Contains(Neighbour);
+
+	//		int32 NewG = CurrentNode->GetG() + FVector::Dist2D(CurrentNode->GetEntrance(), Neighbour->GetEntrance());
+	//
+	//		if (IsInOpen && NewG > Neighbour->GetG())
+	//		{
+	//			continue;
+	//		}
+
+	//		if (IsInOpen)
+	//		{
+	//			OpenArr.Remove(Neighbour);
+	//			OpenArr.Heapify(FCompareNodes());
+	//		}
+
+	//		UE_LOG(LogTemp, Log, TEXT("Iteration: %d | Neighbour Ref: %llu"), Iterations, NeighbourRef);
+
+	//		Neighbour->SetG(NewG);
+	//		Neighbour->SetH(FinishPosition);
+
+	//		static const float Weight = 1.1f;
+
+	//		Neighbour->SetF(Weight);
+
+	//		Neighbour->SetParentRef(CurrentNode->GetRef());
+
+	//		OpenArr.HeapPush(Neighbour, FCompareNodes());
+	//		OpenSet.Add(Neighbour);
+
+	//	}
+
+	//}
 
 	return GetEmptyArray();
 
@@ -187,14 +230,12 @@ TArray<FPolyNode> APathFinder::ReconstructPath(FPolyNode* LastNode)
 
 		Array.Add(*CurrNode);
 
-		if (CurrNode->IsParentRefValid() && PolyMap.Contains(CurrNode->GetParentRef()))
+		if (!CurrNode->IsParentRefValid() && !PolyMap.Contains(CurrNode->GetParentRef()))
 		{
-			CurrNode = &PolyMap[CurrNode->GetParentRef()];
-		
-			continue;
+			break;
 		}
 		
-		CurrNode = nullptr;
+		CurrNode = &PolyMap[CurrNode->GetParentRef()];
 
 	}
 
@@ -271,16 +312,15 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 
 }
 
-void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* PolyRef)
+static int32 NeighbourCount = 0;
+
+void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, dtPolyRef& PolyRef)
 {
 
-	if (!NeighboursArr.IsEmpty())
-	{
-		NeighboursArr.Empty();
-	}
+	NeighboursArr.Empty();
 
-	const dtPoly* Poly;
-	const dtMeshTile* Tile;
+	const dtPoly* Poly = nullptr;
+	const dtMeshTile* Tile = nullptr;;
 
 	const dtNavMesh * DetourMesh = GetDetourMesh();
 
@@ -289,7 +329,7 @@ void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* Pol
 		return;
 	}
 
-	dtStatus Status = DetourMesh->getTileAndPolyByRef(*PolyRef, &Tile, &Poly);
+	dtStatus Status = DetourMesh->getTileAndPolyByRef(PolyRef, &Tile, &Poly);
 
 	if (!dtStatusSucceed(Status))
 	{
@@ -309,8 +349,14 @@ void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* Pol
 		return;
 	}
 
+	if (!Tile->header)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Tile header Is Invalid. APathFinder::GetNeighbours "));
+		return;
+	}
 
-	FPolyHandle MainHandle = FPolyHandle(*PolyRef, Poly);
+
+	FPolyHandle MainHandle = FPolyHandle(PolyRef, Poly);
 	FPolyHandle OtherHandle = FPolyHandle(); // Other Handle HAS to be invalid for now
 
 	FPolyInfo PolyInfo = FPolyInfo(MainHandle, OtherHandle, Tile, DetourMesh);
@@ -320,7 +366,7 @@ void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* Pol
 
 	dtPolyRef NeighbourRef = 0;
 
-	for (int i = 0; i < DT_VERTS_PER_POLYGON; i++)
+	for (int i = 0; i < Poly->vertCount; i++)
 	{
 
 		unsigned short NeighbourIndex = PolyInfo.MainHandle.Poly->neis[i];
@@ -330,16 +376,29 @@ void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* Pol
 			continue;
 		}
 
+		bool IsOutsideTile = false;
+
 		if (NeighbourIndex & DT_EXT_LINK) // is the neighbour index outside of current tile? more expensive calculations
 		{
+			if (NeighbourIndex - 1 >= Tile->header->maxLinkCount)
+			{
+				continue;
+			}
+
 			NeighbourRef = FPortalBuilder::GetRefOutsideTile(&PolyInfo, i);
 			DetourMesh->getTileAndPolyByRef(NeighbourRef, &NeighbourTile, &Neighbour);
+			IsOutsideTile = true;
 		}
 		else
 		{
-			Neighbour = &PolyInfo.Tile->polys[NeighbourIndex - 1];
+			// If true, poly is trash 
+			if (NeighbourIndex - 1 >= Tile->header->polyCount)
+			{
+				continue;
+			}
 
-			PolyInfo.OtherHandle = FPolyHandle(0, Neighbour);
+
+			Neighbour = &PolyInfo.Tile->polys[NeighbourIndex - 1];
 
 			NeighbourRef = GetPolyRef(PolyInfo, EWhichHandle::OTHER);
 		}
@@ -355,8 +414,14 @@ void APathFinder::GetNeighbours(TArray<FPolyNode>& NeighboursArr, dtPolyRef* Pol
 		NeighbourPolyNode.SetEntrance(Portal.GetPortalMiddle());
 		NeighbourPolyNode.SetRef(NeighbourRef);
 
-		NeighboursArr.Add(NeighbourPolyNode);
+		NeighboursArr.Add(NeighbourRef);
 		AddPolyToMap(NeighbourRef, NeighbourPolyNode);
+
+		NeighbourCount++;
+
+		// Logging 
+		UE_LOG(LogTemp, Log, TEXT("Neighbour %d: | Is External: %d | Portal Midpoint: %s | Ref: %llu"),
+			NeighbourCount, IsOutsideTile, *NeighbourPolyNode.GetEntrance().ToString(), NeighbourRef);
 	
 	}
 

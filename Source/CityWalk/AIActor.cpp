@@ -59,6 +59,14 @@ void AAIActor::BeginPlay()
 
 	Destination = DestinationsArray[0];
 
+	int32 Index = 0;
+
+	for (FVector V : DestinationsArray)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Destination %d: %s"), Index, *V.ToString());
+		Index++;
+	}
+
 }
 
 // Called every frame
@@ -86,28 +94,22 @@ void AAIActor::MoveAI()
 
 void AAIActor::MoveOnPath()
 {
-
 	if (DestinationsArray.IsEmpty() || !DestinationsArray.IsValidIndex(DestinationIndex))
 	{
 		return;
 	}
-
-	Destination = DestinationsArray[DestinationIndex];
-
+	
 	float MaxDistance = 200.0f;
 
-	if (FVector::Dist2D(GetActorLocation(), Destination) < MaxDistance)
+	if (FVector::Dist2D(GetActorLocation(), Destination) < MaxDistance && DestinationsArray.IsValidIndex(DestinationIndex + 1))
 	{
 		DestinationIndex++;
 	}
 
-	if (DestinationsArray.IsEmpty() || !DestinationsArray.IsValidIndex(DestinationIndex))
-	{
-		return;
-	}
+	
 
 	Destination = DestinationsArray[DestinationIndex];
-
+	
 
 }
 
