@@ -50,7 +50,7 @@ void AAIActor::BeginPlay()
 		return;
 	}
 
-	CityAIController->FindPath(this, DestinationsArray, FVector(-700.0f, -400.0f, 0.0f));
+	CityAIController->FindPath(this, DestinationsArray, FVector(-1800.0f, -200.0f, 0.0f));
 
 	if (DestinationsArray.IsEmpty())
 	{

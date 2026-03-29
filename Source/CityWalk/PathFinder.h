@@ -169,8 +169,6 @@ public:
 	**/
 	void GetClosestPoly(dtPolyRef * Poly, const FVector& Location, const FVector& Extent);
 
-	
-
 	void GetNeighbours(TArray<dtPolyRef> &NeighboursArr, dtPolyRef& Poly);
 
 	FORCEINLINE TArray<FPolyNode> GetEmptyArray() const

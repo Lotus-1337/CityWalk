@@ -82,19 +82,49 @@ struct FPolyInfo
 
 };
 
-// Converting From Detour to UE5.
+/**
+*
+* @returns A FVector Converted From dtReal
+* 
+*/ 
 FORCEINLINE FVector RealToVector(const dtReal* V)
 {
 	// X -> X, Z -> Y, Y -> Z
 	return FVector(V[0], V[2], V[1]);
 }
 
+/**
+* @param Out: Ouputs a Real Converted From a Vector
+*/
 FORCEINLINE void VectorToReal(const FVector& V, dtReal Out[3])
 {
 	// X -> X, Y -> Z, Z -> Y
 	Out[0] = V.X;
 	Out[1] = V.Z;
 	Out[2] = V.Y;
+}
+
+/**
+* Use When X and Y Axis Are Inverted
+* @return Returns a Vector with Inverted X and Y Axis Converted From Real 
+**/
+FORCEINLINE FVector InvRealToVector(const dtReal* V)
+{
+	// X -> X, Z -> Y, Y -> Z
+	return FVector(-V[0], -V[2], V[1]);
+}
+
+/**
+* Use When X and Y Axis Are Inverted.
+* 
+* @param Out: Ouputs a Real Converted From a Vector with Inverted X and Y Axis
+**/
+FORCEINLINE void InvVectorToReal(const FVector& V, dtReal Out[3])
+{
+	// X -> X, Y -> Z, Z -> Y
+	Out[0] = -V.X;
+	Out[1] = V.Z;
+	Out[2] = -V.Y;
 }
 
 UENUM()

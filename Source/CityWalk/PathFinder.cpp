@@ -28,8 +28,7 @@ APathFinder::APathFinder()
 // Called when the game starts or when spawned
 void APathFinder::BeginPlay()
 {
-	Super::BeginPlay();
-	
+	Super::BeginPlay();	
 }
 
 // Called every frame
@@ -72,21 +71,16 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 		GetEmptyArray();
 	}
 
-	FVector DefaultExtent = FVector(200.0f, 200.0f, 1000.0f);
+	FVector DefaultExtent = FVector(100.0f, 100.0f, 200.0f);
 
-	dtPolyRef FirstPolyRef = 0;
-	dtPolyRef LastPolyRef = 0;
+	dtPolyRef StartRef = 0;
+	dtPolyRef EndRef = 0;
 
-	dtPolyRef* StartRef = &FirstPolyRef; 
-	dtPolyRef* EndRef = &LastPolyRef;
+	GetClosestPoly(&StartRef, StartingPosition, DefaultExtent);
+	GetClosestPoly(&EndRef, FinishPosition, DefaultExtent);
 
-	GetClosestPoly(StartRef, StartingPosition, DefaultExtent);
-	GetClosestPoly(EndRef, FinishPosition, DefaultExtent);
-
-	bool IsStartValid = *StartRef != 0;
-	bool IsEndValid   = *EndRef   != 0;
-
-	UE_LOG(LogTemp, Warning, TEXT("Start ( %llu ) End ( %llu ). Start Valid %d, End Valid %d"), *StartRef, *EndRef, IsStartValid, IsEndValid);
+	bool IsStartValid = StartRef != 0;
+	bool IsEndValid   = EndRef   != 0;
 
 	if (!IsStartValid || !IsEndValid)
 	{
@@ -97,18 +91,23 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 	FPolyNode StartNode;
 	StartNode.SetEntrance(StartingPosition);
 	StartNode.SetG(0);
-	StartNode.SetRef(*StartRef);
-	AddPolyToMap(*StartRef, StartNode);
+	StartNode.SetRef(StartRef);
+	AddPolyToMap(StartRef, StartNode);
 
 	FPolyNode LastNode;
 	LastNode.SetEntrance(FinishPosition);
 	LastNode.SetG(0);
-	LastNode.SetRef(*EndRef);
-	AddPolyToMap(*EndRef, LastNode);
+	LastNode.SetRef(EndRef);
+	AddPolyToMap(EndRef, LastNode);
 
 	TArray<dtPolyRef> NeighboursArray;
 
-	GetNeighbours(NeighboursArray, *StartRef);
+	/*GetNeighbours(NeighboursArray, StartRef);
+
+	if (NeighboursArray.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Neighbours Array is Empty. "));
+	}
 
 	int32 Index = 0;
 
@@ -125,9 +124,7 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 
 		UE_LOG(LogTemp, Log, TEXT("Neighbour Index: %d"), Index);
 
-	}
-
-
+	}*/
 
 	//FPolyNode* CurrentNode = PolyMap.Find(*StartRef);
 	//FPolyNode* EndNode = PolyMap.Find(*EndRef);
@@ -288,7 +285,7 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 		return;
 	}
 
-
+	UE_LOG(LogTemp, Log, TEXT("Looking For a New Poly"));
 
 	dtNavMeshQuery Query = dtNavMeshQuery();
 	Query.init(GetDetourMesh(), 2048);
@@ -298,17 +295,60 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 	dtReal Center[3];
 	dtReal ExtentReal[3];
 
-	VectorToReal(Location, Center);
+	dtReal NearestPt[3];
+
+	//VectorToReal(FVector(-Location.X, -Location.Y, Location.Z), Center);
+	InvVectorToReal(Location, Center);
 	VectorToReal(Extent, ExtentReal);
 
-	dtStatus Status = Query.findNearestPoly(Center, ExtentReal, &QueryFilter, Poly, nullptr);
-
-	UE_LOG(LogTemp, Log, TEXT("Poly: %llu. Status Success: %d, Status Fail: %d"), *Poly, dtStatusSucceed(Status), dtStatusFailed(Status));
+	dtStatus Status = Query.findNearestPoly(Center, ExtentReal, &QueryFilter, Poly, NearestPt);
 
 	if (!dtStatusSucceed(Status) || *Poly == 0)
 	{
 		*Poly = 0;
 	}
+
+	const dtMeshTile* Tile = nullptr;
+	const dtPoly* Poly1 = nullptr;
+
+	const dtNavMesh* Mesh = GetDetourMesh();
+	Mesh->getTileAndPolyByRef(*Poly, &Tile, &Poly1);
+
+	if (!Tile)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Tile is a nullptr"));
+		return;
+	}
+
+	if (!Poly1)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Poly1 is a nullptr"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Found Poly's Index: %u"), Poly1 - Tile->polys);
+
+	for (int32 i = 0; i < Mesh->getMaxTiles(); i++)
+	{
+
+		const dtMeshTile* FoundTile = Mesh->getTile(i);
+
+		if (FoundTile != Tile)
+		{
+			continue;
+		}
+
+		FVector BMin = InvRealToVector(FoundTile->header->bmin);
+		FVector BMax = InvRealToVector(FoundTile->header->bmax);
+
+		FVector CenterV = (BMin + BMax) * 0.5f;
+
+		UE_LOG(LogTemp, Warning, TEXT("Tile of Index %d :"), i);
+		UE_LOG(LogTemp, Log, TEXT("BMin: %s | BMax: %s"), *BMin.ToString(), *BMax.ToString());
+		UE_LOG(LogTemp, Log, TEXT("Center: %s"), *CenterV.ToString());
+
+	}
+
 
 }
 
@@ -366,10 +406,14 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, dtPolyRef& Pol
 
 	dtPolyRef NeighbourRef = 0;
 
+	UE_LOG(LogTemp, Log, TEXT("Tile Poly Count = %u"), Tile->header->polyCount);
+
 	for (int i = 0; i < Poly->vertCount; i++)
 	{
 
 		unsigned short NeighbourIndex = PolyInfo.MainHandle.Poly->neis[i];
+
+		UE_LOG(LogTemp, Log, TEXT("Neighbour Index: %d"), NeighbourIndex);
 
 		if (NeighbourIndex == 0)
 		{
@@ -380,11 +424,6 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, dtPolyRef& Pol
 
 		if (NeighbourIndex & DT_EXT_LINK) // is the neighbour index outside of current tile? more expensive calculations
 		{
-			if (NeighbourIndex - 1 >= Tile->header->maxLinkCount)
-			{
-				continue;
-			}
-
 			NeighbourRef = FPortalBuilder::GetRefOutsideTile(&PolyInfo, i);
 			DetourMesh->getTileAndPolyByRef(NeighbourRef, &NeighbourTile, &Neighbour);
 			IsOutsideTile = true;
@@ -394,6 +433,7 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, dtPolyRef& Pol
 			// If true, poly is trash 
 			if (NeighbourIndex - 1 >= Tile->header->polyCount)
 			{
+				UE_LOG(LogTemp, Log, TEXT("Neighbour Index is above PolyCount"));
 				continue;
 			}
 
@@ -495,7 +535,7 @@ FVector APathFinder::GetPolygonCentroid(dtPolyRef* Ref) const
 
 		// Converting From Detour to UE5.
 
-		Center = RealToVector(V);
+		Center += InvRealToVector(V);
 
 	}
 
