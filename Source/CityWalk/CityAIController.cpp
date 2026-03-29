@@ -62,7 +62,11 @@ bool ACityAIController::FindPath(AAIActor* AI, TArray<FVector>& Arr, const FVect
 
 	TArray<FPortal> PortalArray;
 
+	PortalArray.Add(FPortal::FakePortal(AILocation)); // Adding a Fake Portal of the Start
+
 	bool DidBuilderSucceed = PortalBuilder->GetPortalPath(PortalArray, PolyArr, PathFinder);
+	
+	PortalArray.Add(FPortal::FakePortal(GoalLocation)); // Adding a Fake Portal of the End
 
 	if (PortalArray.IsEmpty() || !DidBuilderSucceed)
 	{

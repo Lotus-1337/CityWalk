@@ -102,114 +102,90 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 
 	TArray<dtPolyRef> NeighboursArray;
 
-	/*GetNeighbours(NeighboursArray, StartRef);
+	FPolyNode* CurrentNode = PolyMap.Find(StartRef);
+	FPolyNode* EndNode = PolyMap.Find(EndRef);
 
-	if (NeighboursArray.IsEmpty())
+	TArray<dtPolyRef> NeighboursArr;
+	
+	TArray<FPolyNode*> OpenArr;
+	TArray<FPolyNode*> OpenSet;
+	TArray<FPolyNode*> ClosedSet;
+
+	OpenArr.Heapify(FCompareNodes());
+
+	OpenArr.HeapPush(CurrentNode, FCompareNodes());
+	OpenSet.Add(CurrentNode);
+
+	int32 Iterations = 0;
+
+	while (!OpenArr.IsEmpty())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Neighbours Array is Empty. "));
-	}
 
-	int32 Index = 0;
+		OpenArr.HeapPop(CurrentNode, FCompareNodes());
 
-	for (dtPolyRef& NeiRef : NeighboursArray)
-	{
-
-		FPolyNode* Neighbour = PolyMap.Find(NeiRef);
-
-		if (!Neighbour)
+		if (CurrentNode->GetRef() == EndNode->GetRef() || CurrentNode->GetRef() == EndNode->GetRef())
 		{
-			UE_LOG(LogTemp, Error, TEXT("APathFinder::FindPath : Neighbour is nullptr. "));
-			continue;
+			UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
+			return ReconstructPath(CurrentNode);
 		}
 
-		UE_LOG(LogTemp, Log, TEXT("Neighbour Index: %d"), Index);
+		ClosedSet.Add(CurrentNode);
+		OpenSet.Remove(CurrentNode);
 
-	}*/
+		dtPolyRef Ref = CurrentNode->GetRef(); // GetRef() returns an rvalue ( one that is not in the memory )
 
-	//FPolyNode* CurrentNode = PolyMap.Find(*StartRef);
-	//FPolyNode* EndNode = PolyMap.Find(*EndRef);
+		GetNeighbours(NeighboursArr, Ref);
 
-	//TArray<dtPolyRef> NeighboursArr;
-	//
-	//TArray<FPolyNode*> OpenArr;
-	//TArray<FPolyNode*> OpenSet;
-	//TArray<FPolyNode*> ClosedSet;
+		for (dtPolyRef& NeighbourRef : NeighboursArr)
+		{
 
-	//OpenArr.Heapify(FCompareNodes());
+			Iterations++;
 
-	//OpenArr.HeapPush(CurrentNode, FCompareNodes());
-	//OpenSet.Add(CurrentNode);
+			FPolyNode *Neighbour = PolyMap.Find(NeighbourRef);
+			
+			if (!Neighbour)
+			{
+				UE_LOG(LogTemp, Error, TEXT("APathFinder::FindPath: A Neighbour in NeighboursArray was not found in PolyMap. "));
+				continue;
+			}
+			
+			if (ClosedSet.Contains(Neighbour))
+			{
+				continue;
+			}
 
-	//int32 Iterations = 0;
+			bool IsInOpen = OpenSet.Contains(Neighbour);
 
-	//while (!OpenArr.IsEmpty())
-	//{
+			int32 NewG = CurrentNode->GetG() + FVector::Dist2D(CurrentNode->GetEntrance(), Neighbour->GetEntrance());
+	
+			if (IsInOpen && NewG > Neighbour->GetG())
+			{
+				continue;
+			}
 
-	//	OpenArr.HeapPop(CurrentNode, FCompareNodes());
+			if (IsInOpen)
+			{
+				OpenArr.Remove(Neighbour);
+				OpenArr.Heapify(FCompareNodes());
+			}
 
-	//	if (CurrentNode->GetRef() == EndNode->GetRef() || CurrentNode->GetRef() == EndNode->GetRef())
-	//	{
-	//		UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
-	//		return ReconstructPath(CurrentNode);
-	//	}
+			UE_LOG(LogTemp, Log, TEXT("Iteration: %d | Neighbour Ref: %llu"), Iterations, NeighbourRef);
 
-	//	ClosedSet.Add(CurrentNode);
-	//	OpenSet.Remove(CurrentNode);
+			Neighbour->SetG(NewG);
+			Neighbour->SetH(FinishPosition);
 
-	//	dtPolyRef Ref = CurrentNode->GetRef(); // GetRef() returns an rvalue ( one that is not in the memory )
+			static const float Weight = 1.1f;
 
-	//	GetNeighbours(NeighboursArr, &Ref);
+			Neighbour->SetF(Weight);
 
-	//	for (dtPolyRef& NeighbourRef : NeighboursArr)
-	//	{
+			Neighbour->SetParentRef(CurrentNode->GetRef());
 
-	//		Iterations++;
+			OpenArr.HeapPush(Neighbour, FCompareNodes());
+			OpenSet.Add(Neighbour);
 
-	//		FPolyNode *Neighbour = PolyMap.Find(NeighbourRef);
+		}
 
-	//		if (!Neighbour)
-	//		{
-	//			UE_LOG(LogTemp, Error, TEXT("APathFinder::FindPath: A Neighbour in NeighboursArray was not found in PolyMap. "));
-	//			continue;
-	//		}
-	//		
-	//		if (ClosedSet.Contains(Neighbour))
-	//		{
-	//			continue;
-	//		}
-
-	//		bool IsInOpen = OpenSet.Contains(Neighbour);
-
-	//		int32 NewG = CurrentNode->GetG() + FVector::Dist2D(CurrentNode->GetEntrance(), Neighbour->GetEntrance());
-	//
-	//		if (IsInOpen && NewG > Neighbour->GetG())
-	//		{
-	//			continue;
-	//		}
-
-	//		if (IsInOpen)
-	//		{
-	//			OpenArr.Remove(Neighbour);
-	//			OpenArr.Heapify(FCompareNodes());
-	//		}
-
-	//		UE_LOG(LogTemp, Log, TEXT("Iteration: %d | Neighbour Ref: %llu"), Iterations, NeighbourRef);
-
-	//		Neighbour->SetG(NewG);
-	//		Neighbour->SetH(FinishPosition);
-
-	//		static const float Weight = 1.1f;
-
-	//		Neighbour->SetF(Weight);
-
-	//		Neighbour->SetParentRef(CurrentNode->GetRef());
-
-	//		OpenArr.HeapPush(Neighbour, FCompareNodes());
-	//		OpenSet.Add(Neighbour);
-
-	//	}
-
-	//}
+	}
 
 	return GetEmptyArray();
 
@@ -297,7 +273,7 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 
 	dtReal NearestPt[3];
 
-	//VectorToReal(FVector(-Location.X, -Location.Y, Location.Z), Center);
+	//VectorToReal(Location, Center);
 	InvVectorToReal(Location, Center);
 	VectorToReal(Extent, ExtentReal);
 
@@ -308,53 +284,11 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 		*Poly = 0;
 	}
 
-	const dtMeshTile* Tile = nullptr;
-	const dtPoly* Poly1 = nullptr;
-
-	const dtNavMesh* Mesh = GetDetourMesh();
-	Mesh->getTileAndPolyByRef(*Poly, &Tile, &Poly1);
-
-	if (!Tile)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Tile is a nullptr"));
-		return;
-	}
-
-	if (!Poly1)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Poly1 is a nullptr"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Log, TEXT("Found Poly's Index: %u"), Poly1 - Tile->polys);
-
-	for (int32 i = 0; i < Mesh->getMaxTiles(); i++)
-	{
-
-		const dtMeshTile* FoundTile = Mesh->getTile(i);
-
-		if (FoundTile != Tile)
-		{
-			continue;
-		}
-
-		FVector BMin = InvRealToVector(FoundTile->header->bmin);
-		FVector BMax = InvRealToVector(FoundTile->header->bmax);
-
-		FVector CenterV = (BMin + BMax) * 0.5f;
-
-		UE_LOG(LogTemp, Warning, TEXT("Tile of Index %d :"), i);
-		UE_LOG(LogTemp, Log, TEXT("BMin: %s | BMax: %s"), *BMin.ToString(), *BMax.ToString());
-		UE_LOG(LogTemp, Log, TEXT("Center: %s"), *CenterV.ToString());
-
-	}
-
-
 }
 
 static int32 NeighbourCount = 0;
 
-void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, dtPolyRef& PolyRef)
+void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, const dtPolyRef& PolyRef)
 {
 
 	NeighboursArr.Empty();
@@ -470,7 +404,6 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, dtPolyRef& Pol
 void APathFinder::InitNode(dtPolyRef& Ref, FPolyNode& Node)
 {
 	Node.SetRef(Ref);
-	//Node.CalculateCenter(this);
 }
 
 FPolyNode APathFinder::BuildNode(dtPolyRef& Ref)

@@ -10,24 +10,35 @@ struct FPortal
 
 	GENERATED_BODY()
 
-	FVector Edge1;
-	FVector Edge2;
+	FVector Left;
+	FVector Right;
 
-	FPortal()
+	FORCEINLINE FPortal()
 	{
-		Edge1 = FVector::ZeroVector;
-		Edge2 = FVector::ZeroVector;
+		Left = FVector::ZeroVector;
+		Right = FVector::ZeroVector;
 	}
 
-	FPortal(const FVector& V1, const FVector& V2)
+	FORCEINLINE FPortal(const FVector& nLeft, const FVector& nRight)
 	{
-		Edge1 = V1;
-		Edge2 = V2;
+		Left = nLeft;
+		Right = nRight;
 	}
 
-	FVector GetPortalMiddle() const
+	FORCEINLINE FVector GetPortalMiddle() const
 	{
-		return (Edge1 + Edge2) * 0.5; // multiplication by 0.5 is slightly faster than dividing by 2
+		return (Left + Right) * 0.5; // multiplication by 0.5 is slightly faster than dividing by 2
 	}
 
+	/**
+	* Builds a Fake Portal ( One where Left == Right )
+	* 
+	* @returns Fake Portal with Edges Location : Location
+	* 
+	*/
+	FORCEINLINE static FPortal FakePortal(const FVector& Location)
+	{
+		return FPortal(Location, Location);
+	}
+			
 };
