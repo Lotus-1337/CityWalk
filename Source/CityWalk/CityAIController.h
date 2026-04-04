@@ -6,6 +6,7 @@
 #include "AIController.h"
 
 #include "PortalBuilder.h"
+#include "Funnel.h"
 
 #include "CityAIController.generated.h"
 
@@ -13,6 +14,7 @@
 class APathFinder;
 class AAIActor;
 class FPortalBuilder;
+class FFunnel;
 
 /**
 * AI Controller Receiving PathFinding Requests and running PathFinding, Portal Building and Funnel Algorithms * 
@@ -38,6 +40,9 @@ protected:
 
 	/** Object responsible for building Portal Paths **/
 	TUniquePtr<FPortalBuilder> PortalBuilder;
+
+	/** Object responsible for building Funneled Paths **/
+	TUniquePtr<FFunnel> Funnel;
 
 protected:
 

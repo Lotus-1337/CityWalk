@@ -7,6 +7,8 @@
 #include "PFHelper.h"
 #include "PathFinder.h"
 
+#include "Detour/DetourNavMesh.h"
+
 // Sets default values
 FPortalBuilder::FPortalBuilder()
 {

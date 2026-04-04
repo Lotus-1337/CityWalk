@@ -2,12 +2,17 @@
 
 #include "CoreMinimal.h"
 
-#include "Detour/DetourNavMesh.h"
-
 #include "PFHelper.generated.h"
 
 struct dtMeshTile;
 struct dtPoly;
+
+class dtNavMesh;
+
+typedef uint64_t UEType_uint64;
+typedef UEType_uint64 dtPolyRef;
+
+typedef double dtReal;
 
 USTRUCT()
 struct FPolyHandle
@@ -135,10 +140,4 @@ enum class EWhichHandle
 };
 
 /** Returns Poly Ref From PolyInfo's MainHandle Poly **/
-FORCEINLINE dtPolyRef GetPolyRef(const FPolyInfo& PolyInfo, const EWhichHandle& Handle)
-{
-	const dtPoly* Poly = Handle == EWhichHandle::MAIN ? PolyInfo.MainHandle.Poly : PolyInfo.OtherHandle.Poly;
-
-	int32 PolyIndex = int32(Poly - PolyInfo.Tile->polys);
-	return PolyInfo.Mesh->getPolyRefBase(PolyInfo.Tile) + PolyIndex;
-}
+dtPolyRef GetPolyRef(const FPolyInfo& PolyInfo, const EWhichHandle& Handle);

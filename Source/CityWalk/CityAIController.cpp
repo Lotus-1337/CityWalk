@@ -7,6 +7,7 @@
 #include "PathFinder.h"
 #include "PortalBuilder.h"
 #include "Portal.h"
+#include "Funnel.h"
 
 
 ACityAIController::ACityAIController()
@@ -41,16 +42,16 @@ bool ACityAIController::FindPath(AAIActor* AI, TArray<FVector>& Arr, const FVect
 		UE_LOG(LogTemp, Error, TEXT("AI is invalid. ACityAIController::FindPath"));
 		return false;
 	}
-
-	FVector AILocation = AI->GetActorLocation();
-
+	
 	if (!PathFinder)
 	{
 		UE_LOG(LogTemp, Error, TEXT("PathFinder is invalid. ACityAIController::FindPath"));
 		return false;
 	}
 
+	FVector AILocation = AI->GetActorLocation();
 	TArray<dtPolyRef> PolyArr;
+
 	PathFinder->FindPath(PolyArr, AILocation, GoalLocation);
 
 	if (PolyArr.IsEmpty())
@@ -77,12 +78,7 @@ bool ACityAIController::FindPath(AAIActor* AI, TArray<FVector>& Arr, const FVect
 
 	Arr.Empty();
 
-	for (FPortal & Portal : PortalArray)
-	{
-
-		Arr.Add(Portal.GetPortalMiddle());
-
-	}
+	Funnel->BuildFunnelPath(Arr, PortalArray);
 
 	AI->OnFoundNewPath();
 

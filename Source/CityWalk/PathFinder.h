@@ -5,14 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-#include "Detour/DetourNavMesh.h"
-
 #include "PathFinder.generated.h"
 
 class dtNavMesh;
 class dtNavMeshQuery;
 
 class APathFinder;
+
+typedef uint64_t UEType_uint64;
+typedef UEType_uint64 dtPolyRef;
 
 USTRUCT()
 struct FPolyNode

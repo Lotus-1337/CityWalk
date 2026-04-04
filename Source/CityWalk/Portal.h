@@ -41,4 +41,9 @@ struct FPortal
 		return FPortal(Location, Location);
 	}
 			
+	FORCEINLINE bool IsFake() const
+	{
+		return Left != Right;
+	}
+
 };
