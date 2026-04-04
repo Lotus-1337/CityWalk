@@ -31,16 +31,16 @@ public:
 
 protected:
 
-	dtPolyRef Ref;
+	dtPolyRef Ref = 0;
 
 	// Entrance portal midpoint
-	FVector Entrance;
+	FVector Entrance = FVector::ZeroVector;
 
 	int32 H = 10;
 	int32 G = 1e10;
 	int32 F = 0;
 
-	dtPolyRef ParentRef;
+	dtPolyRef ParentRef = 0;
 
 public:
 
@@ -79,6 +79,16 @@ public:
 	FORCEINLINE dtPolyRef GetParentRef() const { return ParentRef; };
 
 	FORCEINLINE void SetParentRef(const dtPolyRef& NewRef) { ParentRef = NewRef; };
+
+	// Operators 
+
+	FORCEINLINE bool operator==(const FPolyNode* OtherNode) const { return Ref == OtherNode->GetRef(); };
+
+	FORCEINLINE bool operator==(const FPolyNode& OtherNode) const { return Ref == OtherNode.GetRef(); };
+
+	FORCEINLINE bool operator!=(const FPolyNode* OtherNode) const { return Ref != OtherNode->GetRef(); };
+	
+	FORCEINLINE bool operator!=(const FPolyNode& OtherNode) const { return Ref != OtherNode.GetRef(); };
 
 };
 
@@ -159,7 +169,7 @@ public:
 	*/
 	void ReverseArray(TArray<FPolyNode>& Arr);
 
-	void SwapNodes(FPolyNode* Node1, FPolyNode* Node2);
+	void SwapNodes(FPolyNode& Node1, FPolyNode& Node2);
 
 	/**
 	* Simple One-Liner Function to Get The Closest Poly
