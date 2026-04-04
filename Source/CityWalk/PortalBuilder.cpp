@@ -56,8 +56,8 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 		int32 VertIndex0 = PolyInfo->MainHandle.Poly->verts[i];
 		int32 VertIndex1 = PolyInfo->MainHandle.Poly->verts[(i + 1) % PolyInfo->MainHandle.Poly->vertCount];
 
-		FVector V0 = RealToVector(&PolyInfo->Tile->verts[VertIndex0 * 3]);
-		FVector V1 = RealToVector(&PolyInfo->Tile->verts[VertIndex1 * 3]);
+		FVector V0 = InvRealToVector(&PolyInfo->Tile->verts[VertIndex0 * 3]);
+		FVector V1 = InvRealToVector(&PolyInfo->Tile->verts[VertIndex1 * 3]);
 
 		return FPortal(V1, V0);
 
@@ -150,7 +150,7 @@ const dtPolyRef FPortalBuilder::GetRefOutsideTile(const FPolyInfo* PolyInfo, con
 }
 
 
-bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode>& NodeArray, const APathFinder* PathFinder)
+bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<dtPolyRef>& RefArray, const APathFinder* PathFinder)
 {
 
 	if (!PathFinder)
@@ -161,9 +161,9 @@ bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode
 
 	}
 
-	if (NodeArray.IsEmpty())
+	if (RefArray.IsEmpty())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Given Node Array Is Empty. "));
+		UE_LOG(LogTemp, Warning, TEXT("Given Ref Array Is Empty. "));
 		return false;
 	}
 
@@ -181,22 +181,19 @@ bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode
 
 	const dtNavMesh* DetourNavMesh = PathFinder->GetDetourMesh();
 
-	const FPolyNode* CurrNode;
-	const FPolyNode* NextNode;
-
-	for (int32 i = 0; i < NodeArray.Num() - 1; i++)
+	for (int32 i = 0; i < RefArray.Num() - 1; i++)
 	{
 
 		UE_LOG(LogTemp, Log, TEXT("Iteration %d"), i);
 
-		CurrNode = &NodeArray[i];
-		NextNode = &NodeArray[i + 1];
+		dtPolyRef CurrRef = RefArray[i];
+		dtPolyRef NextRef = RefArray[i + 1];
 
-		DetourNavMesh->getTileAndPolyByRef(CurrNode->GetRef(), &Tile, &NodePoly);
-		DetourNavMesh->getTileAndPolyByRef(NextNode->GetRef(), &NeighbourTile, &NeighbourPoly);
+		DetourNavMesh->getTileAndPolyByRef(CurrRef, &Tile, &NodePoly);
+		DetourNavMesh->getTileAndPolyByRef(NextRef, &NeighbourTile, &NeighbourPoly);
 
-		FPolyHandle MainHandle  = FPolyHandle(CurrNode->GetRef(), NodePoly);
-		FPolyHandle OtherHandle = FPolyHandle(NextNode->GetRef(), NeighbourPoly);
+		FPolyHandle MainHandle  = FPolyHandle(CurrRef, NodePoly);
+		FPolyHandle OtherHandle = FPolyHandle(NextRef, NeighbourPoly);
 
 		FPolyInfo PolyInfo = FPolyInfo(MainHandle, OtherHandle, Tile, DetourNavMesh);
 

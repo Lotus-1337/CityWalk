@@ -31,13 +31,6 @@ void APathFinder::BeginPlay()
 	Super::BeginPlay();	
 }
 
-// Called every frame
-void APathFinder::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 const dtNavMesh* APathFinder::GetDetourMesh() const
 {
 
@@ -61,8 +54,10 @@ const dtNavMesh* APathFinder::GetDetourMesh() const
 
 }
 
-TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const FVector& FinishPosition)
+bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
 {
+
+	OutArray.Empty();
 
 	const dtNavMesh* DetourMesh = APathFinder::GetDetourMesh();
 
@@ -87,7 +82,7 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 	if (!IsStartValid || !IsEndValid)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Start ( %d ) or End ( %d ) Poly is 0 ( invalid ). "), IsStartValid, IsEndValid);
-		return GetEmptyArray();
+		return false;
 	}
 
 	FPolyNode StartNode;
@@ -128,7 +123,7 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 		if (CurrentNode->GetRef() == EndNode->GetRef())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
-			return ReconstructPath(CurrentNode);
+			return ReconstructPath(OutArray, CurrentNode);
 		}
 
 		ClosedSet.Add(CurrentNode->GetRef());
@@ -190,23 +185,22 @@ TArray<FPolyNode> APathFinder::FindPath(const FVector& StartingPosition, const F
 
 	}
 
-	return GetEmptyArray();
+	return false;
 
 }
 
-TArray<FPolyNode> APathFinder::ReconstructPath(FPolyNode* LastNode)
+bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* LastNode)
 {
 
 	UE_LOG(LogTemp, Log, TEXT("APathFinder::ReconstructPath"));
 
 	const FPolyNode* CurrNode = LastNode;
 
-	TArray<FPolyNode> Array;
 
 	while (CurrNode)
 	{
 
-		Array.Add(*CurrNode);
+		OutArray.Add(CurrNode->GetRef());
 
 		UE_LOG(LogTemp, Log, TEXT("Ref: %llu | Parent Ref: %llu | APathFinder::ReconstructPath"), CurrNode->GetRef(), CurrNode->GetParentRef());
 
@@ -219,36 +213,36 @@ TArray<FPolyNode> APathFinder::ReconstructPath(FPolyNode* LastNode)
 
 	}
 
-	ReverseArray(Array);
+	ReverseArray(OutArray);
 
 	UE_LOG(LogTemp, Log, TEXT("Reconstruct Path Actually Suceeded. "));
-
-	return Array;
+	
+	return true;
 
 }
 
-void APathFinder::SwapNodes(FPolyNode& Node1, FPolyNode& Node2)
+void APathFinder::SwapNodes(dtPolyRef& Node1, dtPolyRef &Node2)
 {
 
-	FPolyNode Temp = Node1;
+	dtPolyRef Temp = Node1;
 
 	Node1 = Node2;
 	Node2 = Temp;
 
 }
 
-void APathFinder::ReverseArray(TArray<FPolyNode>& Array)
+void APathFinder::ReverseArray(TArray<dtPolyRef>& OutArray)
 {
 
 
 	UE_LOG(LogTemp, Log, TEXT("APathFinder::ReverseArray"));
 
-	int32 Size = Array.Num() * 0.5; // MULTIPLICATION BY 0.5 IS A TOUCH FASTER THAN DIVIDING BY 2
+	int32 Size = OutArray.Num() * 0.5; // MULTIPLICATION BY 0.5 IS A TOUCH FASTER THAN DIVIDING BY 2
 
 	for (int32 i = 0; i < Size; i++)
 	{
 
-		SwapNodes(Array[i], Array[Array.Num() - i - 1]);
+		SwapNodes(OutArray[i], OutArray[OutArray.Num() - i - 1]);
 
 	}
 

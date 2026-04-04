@@ -50,7 +50,8 @@ bool ACityAIController::FindPath(AAIActor* AI, TArray<FVector>& Arr, const FVect
 		return false;
 	}
 
-	TArray<FPolyNode> PolyArr = PathFinder->FindPath(AILocation, GoalLocation);
+	TArray<dtPolyRef> PolyArr;
+	PathFinder->FindPath(PolyArr, AILocation, GoalLocation);
 
 	if (PolyArr.IsEmpty())
 	{

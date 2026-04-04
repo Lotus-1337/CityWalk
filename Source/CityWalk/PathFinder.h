@@ -119,7 +119,7 @@ protected:
 	* Hash Map of All the Poly Nodes, where dtPolyRefs Are Hashed
 	* This Allows Finding PolyNodes by their Refs 
 	*/
-	TMap<dtPolyRef, FPolyNode> PolyMap;
+	TMap<dtPolyRef, FPolyNode> PolyMap; // Can be a set
 	
 public:	
 	// Sets default values for this actor's properties
@@ -132,8 +132,6 @@ protected:
 	void AddPolyToMap(dtPolyRef& Ref, FPolyNode& Node);
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 	/**
 	* Initializes Values in an existing Node 
@@ -152,24 +150,25 @@ public:
 	* 
 	* @returns An Array of Polys
 	*/
-	TArray<FPolyNode> FindPath(const FVector& StartingPosition, const FVector& FinishPosition);
+	bool FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition);
 	
 	/**
 	* Goes Through Last Node's Parents to Reconstruct the Path
 	* 
+	* @param OutArray: Outputs Reconstructed Path to the Array
 	* @param LastNode: The Last Node found in PathFinding Algorithm
 	* 
-	* @returns An Array of Parents From Last Node to Starting Node
+	* @returns The success of the Operation
 	*/
-	TArray<FPolyNode> ReconstructPath(FPolyNode* LastNode);
+	bool ReconstructPath(TArray<dtPolyRef> & OutArray, const FPolyNode* LastNode);
 
 	/**
 	* Neccesary for APathFinder::ReconstructPath()
 	* It's Important because in the said function Path Starts From The Last Node, which is not wanted
 	*/
-	void ReverseArray(TArray<FPolyNode>& Arr);
+	void ReverseArray(TArray<dtPolyRef>& Arr);
 
-	void SwapNodes(FPolyNode& Node1, FPolyNode& Node2);
+	void SwapNodes(dtPolyRef& Node1, dtPolyRef& Node2);
 
 	/**
 	* Simple One-Liner Function to Get The Closest Poly

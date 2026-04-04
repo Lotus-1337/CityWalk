@@ -57,7 +57,7 @@ public:
 	*/
 	static const dtPolyRef GetRefOutsideTile(const FPolyInfo* PolyInfo, const int32& Index);
 
-	bool GetPortalPath(TArray<FPortal>& PortalPath, TArray<FPolyNode>& NodeArray, const APathFinder* PathFinder);
+	bool GetPortalPath(TArray<FPortal>& PortalPath, TArray<dtPolyRef>& InArray, const APathFinder* PathFinder);
 
 	static bool ValidatePolyInfo(const FPolyInfo* PolyInfo, const bool& ShouldCheckOtherHandle = true);
 	
