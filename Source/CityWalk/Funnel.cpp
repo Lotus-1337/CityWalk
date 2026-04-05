@@ -19,17 +19,34 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 		return false;
 	}
 
+	if (!InArray[0].IsFake())
+	{
+		UE_LOG(LogTemp, Error, TEXT("The FIRST Element is Not a Fake Portal. "));
+		UE_LOG(LogTemp, Warning, TEXT("First And Last Elements Have to Be Fake Portals For the Algorithm To Work. | FFunnel::BuildFunnelPath"));
+		return false;
+	}
+
+	if (!InArray.Last().IsFake())
+	{
+		UE_LOG(LogTemp, Error, TEXT("The LAST Element is Not a Fake Portal"));
+		UE_LOG(LogTemp, Warning, TEXT("First And Last Elements Have to Be Fake Portals For the Algorithm To Work. | FFunnel::BuildFunnelPath"));
+		return false;
+	}
+
 	FVector Apex = InArray[0].Left;
 	FVector Goal = InArray.Last().Left;
 
 	FVector LeftBoundary  = Apex;
 	FVector RightBoundary = Apex;
 
-	// We're Skipping the first element
+	// First Element is a Fake Portal, so we skip it.
 	for (int32 i = 1; i < InArray.Num(); i++)
 	{
 
 		FPortal CurrentPortal = InArray[i];
+
+		// Add Left And Add Right return True if Apex is changed
+		// If it is, We add it to the OutArray.
 
 		if (AddLeft(Apex, LeftBoundary, RightBoundary, CurrentPortal.Left)) OutArray.Add(Apex);
 
