@@ -19,17 +19,25 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 		return false;
 	}
 
-	FPortal Apex = InArray[0];
-	FPortal Goal = InArray.Last();
+	FVector Apex = InArray[0].Left;
+	FVector Goal = InArray.Last().Left;
 
-	FVector* Left  = &Apex.Left;
-	FVector* Right = &Apex.Right;
+	FVector LeftBoundary  = Apex;
+	FVector RightBoundary = Apex;
 
 	// We're Skipping the first element
-	for (FPortal& CurrentPortal : InArray)
+	for (int32 i = 1; i < InArray.Num(); i++)
 	{
 
+		FPortal CurrentPortal = InArray[i];
 
+		if (AddLeft(Apex, LeftBoundary, RightBoundary, CurrentPortal.Left)) OutArray.Add(Apex);
+
+		if (Apex == Goal) break;
+		
+		if (AddRight(Apex, RightBoundary, LeftBoundary, CurrentPortal.Right)) OutArray.Add(Apex);
+
+		if (Apex == Goal) break;
 
 	}
 
