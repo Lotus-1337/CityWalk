@@ -25,28 +25,11 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 	FVector* Left  = &Apex.Left;
 	FVector* Right = &Apex.Right;
 
-	FPortal* LastPortal = &Apex;
-	FPortal* CurrentPortal = nullptr;
-
 	// We're Skipping the first element
-	for (int32 i = 1; i < InArray.Num(); i++)
+	for (FPortal& CurrentPortal : InArray)
 	{
 
-		CurrentPortal = &InArray[i];
 
-		bool ShouldAddRight = CurrentPortal->Left == LastPortal->Left;
-
-		FVector P = ShouldAddRight ? CurrentPortal->Right : CurrentPortal->Left;
-
-		LastPortal = CurrentPortal;
-
-		if (ShouldAddRight)
-		{
-			AddRight(OutArray, P);
-			break;
-		}
-
-		AddLeft(OutArray, P);
 
 	}
 
@@ -54,17 +37,42 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 
 }
 
-
-bool FFunnel::AddLeft(TArray<FVector>& OutArray, const FVector& V) const
+bool FFunnel::AddLeft(FVector& Apex, FVector& LeftBoundary, const FVector& RightBoundary, const FVector& NewLeftPoint) const
 {
 
+	bool IsNarrowing = Orient2D(Apex, LeftBoundary, NewLeftPoint) >= 0.0;
+
+	if (!IsNarrowing) return false;
+
+	bool IsIntersecting = Orient2D(Apex, RightBoundary, NewLeftPoint) > 0.0;
+
+	if (!IsIntersecting)
+	{
+		LeftBoundary = NewLeftPoint;
+		return false;
+	}
+
+	Apex = RightBoundary;
 	return true;
 
 }
 
-bool FFunnel::AddRight(TArray<FVector>& OutArray, const FVector& V) const
+bool FFunnel::AddRight(FVector& Apex, FVector& RightBoundary, const FVector& LeftBoundary, const FVector& NewRightPoint) const
 {
 
+	bool IsNarrowing = Orient2D(Apex, RightBoundary, NewRightPoint) <= 0.0;
+
+	if (!IsNarrowing) return false;
+
+	bool IsIntersecting = Orient2D(Apex, LeftBoundary, NewRightPoint) < 0.0;
+
+	if (!IsIntersecting)
+	{
+		RightBoundary = NewRightPoint;
+		return false;
+	}
+
+	Apex = LeftBoundary;
 	return true;
 
 }
