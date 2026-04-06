@@ -61,7 +61,7 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 		FVector V0 = InvRealToVector(&PolyInfo->Tile->verts[VertIndex0 * 3]); // Inverted Conversions are useful here too
 		FVector V1 = InvRealToVector(&PolyInfo->Tile->verts[VertIndex1 * 3]);
 
-		return FPortal(V1, V0);
+		return FPortal(V0, V1);
 
 
 	}
@@ -167,11 +167,6 @@ bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<dtPolyRef
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Given Ref Array Is Empty. "));
 		return false;
-	}
-
-	if (!PortalPath.IsEmpty())
-	{
-		PortalPath.Empty();
 	}
 
 	const dtMeshTile* Tile = nullptr;

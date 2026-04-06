@@ -58,6 +58,8 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 
 	}
 
+	OutArray.Add(Goal);
+
 	return true;
 
 }

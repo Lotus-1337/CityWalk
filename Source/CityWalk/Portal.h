@@ -43,7 +43,7 @@ struct FPortal
 			
 	FORCEINLINE bool IsFake() const
 	{
-		return Left != Right;
+		return Left == Right;
 	}
 
 };
