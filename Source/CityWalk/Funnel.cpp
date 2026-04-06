@@ -39,22 +39,39 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 	FVector LeftBoundary  = Apex;
 	FVector RightBoundary = Apex;
 
+	int32 ApexIndex = 0;
+	int32 BoundaryIndex = 0;
+
 	// First Element is a Fake Portal, so we skip it.
 	for (int32 i = 1; i < InArray.Num(); i++)
 	{
+
+		if (Apex.Equals(Goal)) break;
+
+		BoundaryIndex = i;
 
 		FPortal CurrentPortal = InArray[i];
 
 		// Add Left And Add Right return True if Apex is changed
 		// If it is, We add it to the OutArray.
 
-		if (AddLeft(Apex, LeftBoundary, RightBoundary, CurrentPortal.Left)) OutArray.Add(Apex);
+		if (AddLeft(Apex, LeftBoundary, RightBoundary, CurrentPortal.Left))
+		{
+			ResetApex(Apex, RightBoundary, LeftBoundary);
+			ResetIndexes(ApexIndex, BoundaryIndex, i);
+			OutArray.Add(Apex);
+			continue;
+		}
 
-		if (Apex == Goal) break;
+		if (Apex.Equals(Goal)) break;
 		
-		if (AddRight(Apex, RightBoundary, LeftBoundary, CurrentPortal.Right)) OutArray.Add(Apex);
+		if (AddRight(Apex, RightBoundary, LeftBoundary, CurrentPortal.Right)) 
+		{
+			ResetApex(Apex, LeftBoundary, RightBoundary);
+			ResetIndexes(ApexIndex, BoundaryIndex, i);
+			OutArray.Add(Apex);
+		}
 
-		if (Apex == Goal) break;
 
 	}
 
@@ -63,6 +80,27 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 	return true;
 
 }
+
+
+void FFunnel::ResetApex(FVector& Apex, FVector& CrossingBoundary, FVector& OtherBoundary) const
+{
+
+	Apex = CrossingBoundary;
+
+	OtherBoundary = Apex;
+
+}
+
+
+void FFunnel::ResetIndexes(int32& ApexIndex, int32& BoundaryIndex, int32& IterationIndex) const
+{
+
+	IterationIndex = ApexIndex;
+
+	ApexIndex = BoundaryIndex;
+
+}
+
 
 bool FFunnel::AddLeft(FVector& Apex, FVector& LeftBoundary, const FVector& RightBoundary, const FVector& NewLeftPoint) const
 {
