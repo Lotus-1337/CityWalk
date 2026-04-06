@@ -20,16 +20,16 @@ class CITYWALK_API UAIMovementComponent : public UActorComponent
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
-	double ZVelocity;
+	double ZVelocity = 0.0;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
-	float fDeltaTime;
+	float fDeltaTime = 0.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
-	int32 MovementSpeed;
+	int32 MovementSpeed = 100;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
-	bool IsInTheAir;
+	bool IsInTheAir = false;
 
 public:	
 	// Sets default values for this component's properties

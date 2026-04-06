@@ -29,10 +29,10 @@ protected:
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
-	FVector Destination;
+	FVector Destination = FVector::ZeroVector;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
-	int32 DestinationIndex;
+	int32 DestinationIndex = 0;
 
 	TArray<FVector> DestinationsArray;
 
