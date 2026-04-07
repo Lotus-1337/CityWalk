@@ -40,6 +40,8 @@ AWalkerCharacter::AWalkerCharacter()
 void AWalkerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AddControllerPitchInput(-90);
 	
 }
 

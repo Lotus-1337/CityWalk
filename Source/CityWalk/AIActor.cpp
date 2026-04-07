@@ -63,6 +63,8 @@ void AAIActor::BeginPlay()
 	{
 		UE_LOG(LogTemp, Log, TEXT("Destination %d: %s"), Index, *V.ToString());
 		Index++;
+
+		DrawDebugPoint(GetWorld(), V, 5.0f, FColor::Red, false, 10.0f);
 	}
 
 }
