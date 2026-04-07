@@ -6,6 +6,14 @@
 
 struct FPortal;
 
+UENUM()
+enum class EFunnelAddStatus
+{
+	EXPANDING,
+	NARROWING,
+	INTERSECTING,
+};
+
 /**
  * 
  */
@@ -37,14 +45,14 @@ protected:
 	* If it Intersects with Right Boundary, it becomes the Apex
 	* @returns If Apex was changed
 	*/
-	bool AddLeft(FVector& Apex, FVector& LeftBoundary, const FVector& RightBoundary, const FVector& NewLeftPoint) const;
+	EFunnelAddStatus AddLeft(FVector& Apex, FVector& LeftBoundary, const FVector& RightBoundary, const FVector& NewLeftPoint) const;
 
 	/**
 	* If the New Right Point is narrowing the funnel, it becomes the RightBoundary,
 	* If it Intersects with Left Boundary, it becomes the Apex
 	* @returns If Apex was changed
 	*/
-	bool AddRight(FVector& Apex, FVector& RightBoundary, const FVector& LeftBoundary, const FVector& NewRightPoint) const;
+	EFunnelAddStatus AddRight(FVector& Apex, FVector& RightBoundary, const FVector& LeftBoundary, const FVector& NewRightPoint) const;
 
 
 public:

@@ -59,17 +59,11 @@ void AAIActor::BeginPlay()
 
 	int32 Index = 0;
 
-	TArray<FColor> Colors = { FColor::Red, FColor::Blue, FColor::Yellow, FColor::Black, FColor::Green, FColor::Magenta, FColor::Orange, FColor::Purple, FColor::Silver };
-
 	for (FVector V : DestinationsArray)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Destination %d: %s"), Index, *V.ToString());
 		Index++;
-
-		DrawDebugPoint(GetWorld(), V, 10.0f, Colors[Index % Colors.Num()], false, 10.0f);
-
 	}
-
 
 }
 
