@@ -61,7 +61,7 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 		FVector V0 = InvRealToVector(&PolyInfo->Tile->verts[VertIndex0 * 3]); // Inverted Conversions are useful here too
 		FVector V1 = InvRealToVector(&PolyInfo->Tile->verts[VertIndex1 * 3]);
 
-		return FPortal(V0, V1);
+		return FPortal(V1, V0);
 
 
 	}
@@ -180,8 +180,6 @@ bool FPortalBuilder::GetPortalPath(TArray<FPortal>& PortalPath, TArray<dtPolyRef
 
 	for (int32 i = 0; i < RefArray.Num() - 1; i++)
 	{
-
-		UE_LOG(LogTemp, Log, TEXT("Iteration %d"), i);
 
 		dtPolyRef CurrRef = RefArray[i];
 		dtPolyRef NextRef = RefArray[i + 1];

@@ -39,8 +39,6 @@ AAIActor::AAIActor()
 void AAIActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	MovementComponent->SetMovementSpeed(500);
 
 	ACityAIController* CityAIController = Cast<ACityAIController>(GetController());
 
@@ -61,11 +59,17 @@ void AAIActor::BeginPlay()
 
 	int32 Index = 0;
 
+	TArray<FColor> Colors = { FColor::Red, FColor::Blue, FColor::Yellow, FColor::Black, FColor::Green, FColor::Magenta, FColor::Orange, FColor::Purple, FColor::Silver };
+
 	for (FVector V : DestinationsArray)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Destination %d: %s"), Index, *V.ToString());
 		Index++;
+
+		DrawDebugPoint(GetWorld(), V, 10.0f, Colors[Index % Colors.Num()], false, 10.0f);
+
 	}
+
 
 }
 
@@ -99,7 +103,7 @@ void AAIActor::MoveOnPath()
 		return;
 	}
 	
-	float MaxDistance = 200.0f;
+	float MaxDistance = 50.0f;
 
 	if (FVector::Dist2D(GetActorLocation(), Destination) < MaxDistance && DestinationsArray.IsValidIndex(DestinationIndex + 1))
 	{

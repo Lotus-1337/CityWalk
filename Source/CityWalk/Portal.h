@@ -46,4 +46,14 @@ struct FPortal
 		return Left == Right;
 	}
 
+	FORCEINLINE bool IsCollapsed(const double& Tolerance = UE_KINDA_SMALL_NUMBER) const
+	{
+		return (Left - Right).IsNearlyZero(Tolerance);
+	}
+
+	FORCEINLINE static bool ArePointsCollapsed(const FVector& Left, const FVector& Right)
+	{
+		return FPortal(Left, Right).IsCollapsed();
+	}
+
 };

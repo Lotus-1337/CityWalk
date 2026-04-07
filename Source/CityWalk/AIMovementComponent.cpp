@@ -100,7 +100,9 @@ void UAIMovementComponent::Move(FVector& MovementVector)
 		return ;
 	}
 
-	NewLocation += Hit.ImpactNormal;
+	const static float ImpactScalar = 5.0f;
+
+	NewLocation += Hit.ImpactNormal * ImpactScalar;
 
 	GetOwner()->SetActorLocation(NewLocation, true, &Hit);
 

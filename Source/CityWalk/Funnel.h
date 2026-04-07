@@ -61,4 +61,16 @@ public:
 			 - ((B.Y - A.Y) * (C.X - A.X));
 	}
 
+	/**
+	* Calculates Epsilon for Orient2D, 
+	* 
+	*/
+	FORCEINLINE static double GetEpsilon(const FVector& V1, const FVector& V2, const FVector& V3)
+	{
+		double Scale = (V1 - V3).Size2D() * (V2 - V3).Size2D();
+		double BaseEps = 1e-6;
+		double Epsilon = Scale * BaseEps;
+		return FMath::Max(BaseEps, Epsilon);
+	}
+
 };

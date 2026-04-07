@@ -66,8 +66,6 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 		GetEmptyArray();
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("PolyCount: %d"), DetourMesh->getMaxTiles());
-
 	FVector DefaultExtent = FVector(100.0f, 100.0f, 200.0f);
 
 	dtPolyRef StartRef = 0;
@@ -118,8 +116,6 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 		OpenArr.HeapPop(CurrentNode, FCompareNodes());
 
-		UE_LOG(LogTemp, Log, TEXT("CurrNode Ref: %llu. Parent Ref: %llu"), CurrentNode->GetRef(), CurrentNode->GetParentRef());
-
 		if (CurrentNode->GetRef() == EndNode->GetRef())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
@@ -148,7 +144,6 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 			
 			if (ClosedSet.Contains(Neighbour->GetRef()))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Closed Set Contains Neighbour. Ref: %llu"), Neighbour->GetRef() );
 				continue;
 			}
 
@@ -192,7 +187,6 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* LastNode)
 {
 
-	UE_LOG(LogTemp, Log, TEXT("APathFinder::ReconstructPath"));
 
 	const FPolyNode* CurrNode = LastNode;
 
@@ -201,8 +195,6 @@ bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* 
 	{
 
 		OutArray.Add(CurrNode->GetRef());
-
-		UE_LOG(LogTemp, Log, TEXT("Ref: %llu | Parent Ref: %llu | APathFinder::ReconstructPath"), CurrNode->GetRef(), CurrNode->GetParentRef());
 
 		if (!CurrNode->IsParentRefValid() || !PolyMap.Contains(CurrNode->GetParentRef()))
 		{
@@ -214,8 +206,6 @@ bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* 
 	}
 
 	ReverseArray(OutArray);
-
-	UE_LOG(LogTemp, Log, TEXT("Reconstruct Path Actually Suceeded. "));
 	
 	return true;
 
@@ -233,9 +223,6 @@ void APathFinder::SwapNodes(dtPolyRef& Node1, dtPolyRef &Node2)
 
 void APathFinder::ReverseArray(TArray<dtPolyRef>& OutArray)
 {
-
-
-	UE_LOG(LogTemp, Log, TEXT("APathFinder::ReverseArray"));
 
 	int32 Size = OutArray.Num() * 0.5; // MULTIPLICATION BY 0.5 IS A TOUCH FASTER THAN DIVIDING BY 2
 
@@ -266,8 +253,6 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 		UE_LOG(LogTemp, Error, TEXT("RecastMesh is invalid. Returning nullptr. APathFinder::GetDetourMesh"));
 		return;
 	}
-
-	UE_LOG(LogTemp, Log, TEXT("Looking For a New Poly"));
 
 	dtNavMeshQuery Query = dtNavMeshQuery();
 	Query.init(GetDetourMesh(), 2048);

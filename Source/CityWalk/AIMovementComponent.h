@@ -25,7 +25,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	float fDeltaTime = 0.0f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	UPROPERTY(EditAnywhere, Category = "Movement")
 	int32 MovementSpeed = 100;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
