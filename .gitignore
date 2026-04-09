@@ -72,3 +72,8 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+# Assets taking up space
+*.uasset
+Content/__ExternalActors__/Maps/WhereDaCityAt/8/8E/8BDKB8IIEPHBLP984SETD3.uasset
+*.uasset

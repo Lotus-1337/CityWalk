@@ -153,7 +153,7 @@ void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector&
 	}
 
 
-	UE_LOG(LogBenchmark, Log, TEXT("Benchmark %d Finished. Duration in MicroSeconds: %f. VisitedNodes: %d"), BenchmarkIndex, FTimers::MicroSeconds(Duration), Controller->GetVisitedNodes());
+	UE_LOG(LogBenchmark, Log, TEXT("Benchmark %d Finished. Duration in MicroSeconds: %f. VisitedNodes: %d"), BenchmarkIndex, FTimers::MicroSeconds(Duration), AIController->GetVisitedNodes());
 
 	BenchmarkIndex++;
 
