@@ -60,10 +60,12 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 		if (RightStatus == EFunnelAddStatus::INTERSECTING)
 		{
 			OutArray.Add(Apex);
-		
+
 			ApexIndex = LeftIndex;
 
-			Apex = LeftBoundary;
+			LeftBoundary = Apex;
+			RightBoundary = Apex;
+
 			i = ApexIndex - 1;
 
 			continue;
@@ -81,10 +83,12 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 		if (LeftStatus == EFunnelAddStatus::INTERSECTING)
 		{
 			OutArray.Add(Apex);
-		
+
 			ApexIndex = RightIndex;
 
-			Apex = RightBoundary;
+			LeftBoundary = Apex;
+			RightBoundary = Apex;
+
 			i = ApexIndex - 1;
 		}
 		else if (LeftStatus == EFunnelAddStatus::NARROWING)
