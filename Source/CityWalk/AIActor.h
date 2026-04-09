@@ -10,6 +10,10 @@ class UAIMovementComponent;
 class USkeletalMeshComponent;
 class UCapsuleComponent;
 
+class ACityAIController;
+
+DECLARE_LOG_CATEGORY_EXTERN(LogBenchmark, All, All)
+
 UCLASS()
 class CITYWALK_API AAIActor : public APawn
 {
@@ -55,6 +59,19 @@ public:
 
 	// Method that needs to be caled every time a new Path is Found.
 	void OnFoundNewPath();
+
+	/**
+	* Method Benchmarking PathFinding and outputting Time Duration
+	* 
+	* @param StartLocation: Pathfinding will start from the given location
+	* @param GoalLocation:  Pathfinding will search for the given location
+	* 
+	* @param UseDestinationArray: Shoud DestinationArray be the array given for pathfinding ( will it get Pf's result? )
+	* 
+	* @param Controller: One can give the controller to speed up the process a little bit
+	*
+	*/
+	void BenchmarkPathFinding(const FVector& StartLocation, const FVector& GoalLocation, bool bUseDestinationArray = false, ACityAIController * AIController = nullptr);
 
 	FORCEINLINE USkeletalMeshComponent* GetMeshComponent() const { return MeshComponent; }
 

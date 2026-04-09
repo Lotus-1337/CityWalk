@@ -34,25 +34,17 @@ void ACityAIController::BeginPlay()
 }
 
 
-bool ACityAIController::FindPath(AAIActor* AI, TArray<FVector>& Arr, const FVector& GoalLocation)
+bool ACityAIController::FindPath(const FVector& StartLocation, TArray<FVector>& Arr, const FVector& GoalLocation)
 {
-
-	if (!AI)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AI is invalid. ACityAIController::FindPath"));
-		return false;
-	}
-	
 	if (!PathFinder)
 	{
 		UE_LOG(LogTemp, Error, TEXT("PathFinder is invalid. ACityAIController::FindPath"));
 		return false;
 	}
 
-	FVector AILocation = AI->GetActorLocation();
 	TArray<dtPolyRef> PolyArr;
 
-	PathFinder->FindPath(PolyArr, AILocation, GoalLocation);
+	PathFinder->FindPath(PolyArr, StartLocation, GoalLocation);
 
 	if (PolyArr.IsEmpty())
 	{
@@ -63,10 +55,10 @@ bool ACityAIController::FindPath(AAIActor* AI, TArray<FVector>& Arr, const FVect
 
 	TArray<FPortal> PortalArray;
 
-	PortalArray.Add(FPortal::FakePortal(AILocation)); // Adding a Fake Portal of the Start
+	PortalArray.Add(FPortal::FakePortal(StartLocation)); // Adding a Fake Portal of the Start
 
 	bool DidBuilderSucceed = PortalBuilder->GetPortalPath(PortalArray, PolyArr, PathFinder);
-	
+
 	PortalArray.Add(FPortal::FakePortal(GoalLocation)); // Adding a Fake Portal of the End
 
 	if (PortalArray.IsEmpty() || !DidBuilderSucceed)
@@ -79,8 +71,58 @@ bool ACityAIController::FindPath(AAIActor* AI, TArray<FVector>& Arr, const FVect
 
 	Funnel->BuildFunnelPath(Arr, PortalArray);
 
-	AI->OnFoundNewPath();
 
 	return !Arr.IsEmpty();
+}
 
+bool ACityAIController::FindPathAI(AAIActor* AI, TArray<FVector>& Arr, const FVector& GoalLocation)
+{
+
+	if (!AI)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AI is invalid. ACityAIController::FindPath"));
+		return false;
+	}
+	
+	if (!FindPath(AI->GetActorLocation(), Arr, GoalLocation))
+	{
+		return false;
+	}
+
+	AI->OnFoundNewPath();
+
+	return true;
+
+}
+
+
+double ACityAIController::FindPathTimered(const FVector & StartLocation, TArray<FVector>&Arr, const FVector & GoalLocation)
+{
+	double Start = FPlatformTime::Seconds();
+
+	if (FindPath(StartLocation, Arr, GoalLocation))
+	{
+		return FPlatformTime::Seconds() - Start; // returns time of pathfinding if it succeeded
+	}
+
+	return -1.0;
+}
+
+double ACityAIController::FindPathAITimered(AAIActor* AI, TArray<FVector>& Arr, const FVector& GoalLocation)
+{
+
+	double Start = FPlatformTime::Seconds();
+
+	if (FindPathAI(AI, Arr, GoalLocation))
+	{
+		return FPlatformTime::Seconds() - Start; // returns time of pathfinding if it succeeded
+	}
+
+	return -1.0;
+
+}
+
+int32 ACityAIController::GetVisitedNodes() const
+{
+	return PathFinder->NeighbourCount;
 }

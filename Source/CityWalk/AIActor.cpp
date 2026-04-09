@@ -48,7 +48,9 @@ void AAIActor::BeginPlay()
 		return;
 	}
 
-	CityAIController->FindPath(this, DestinationsArray, FVector(-1800.0f, -200.0f, 0.0f));
+	FVector GoalLocation = FVector(-1800.0f, -200.0f, 0.0f);
+
+	BenchmarkPathFinding(GetActorLocation(), GoalLocation, true, CityAIController);
 
 	if (DestinationsArray.IsEmpty())
 	{
@@ -122,5 +124,37 @@ void AAIActor::OnFoundNewPath()
 	}
 
 	Destination = DestinationsArray[0];
+
+}
+
+static int32 BenchmarkIndex = 0;
+
+void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector& GoalLocation, bool bUseDestinationArray, ACityAIController* AIController)
+{
+
+	if (!AIController)
+	{
+		AIController = Cast<ACityAIController>(GetController());
+
+		if (!AIController) return;
+	}
+
+	TArray<FVector> Arr;
+
+	double Duration = 0.0;
+
+	if (!bUseDestinationArray)
+	{
+		Duration = AIController->FindPathTimered(StartLocation, Arr, GoalLocation);
+	}
+	else
+	{
+		Duration = AIController->FindPathTimered(StartLocation, DestinationsArray, GoalLocation);
+	}
+
+
+	UE_LOG(LogBenchmark, Log, TEXT("Benchmark %d Finished. Duration in MicroSeconds: %f. VisitedNodes: %d"), BenchmarkIndex, FTimers::MicroSeconds(Duration), Controller->GetVisitedNodes());
+
+	BenchmarkIndex++;
 
 }

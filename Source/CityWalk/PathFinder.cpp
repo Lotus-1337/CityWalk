@@ -59,6 +59,8 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 	OutArray.Empty();
 
+	NeighbourCount = 0;
+
 	const dtNavMesh* DetourMesh = APathFinder::GetDetourMesh();
 
 	if (!DetourMesh)
@@ -116,6 +118,8 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 		OpenArr.HeapPop(CurrentNode, FCompareNodes());
 
+		NeighbourCount++;
+
 		if (CurrentNode->GetRef() == EndNode->GetRef())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
@@ -166,7 +170,7 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 			Neighbour->SetG(NewG);
 			Neighbour->SetH(FinishPosition);
 
-			static const float Weight = 1.1f;
+			static const float Weight = 1.2f;
 
 			Neighbour->SetF(Weight);
 
@@ -277,8 +281,6 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 
 }
 
-static int32 NeighbourCount = 0;
-
 void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, const dtPolyRef& PolyRef)
 {
 
@@ -383,8 +385,6 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, const dtPolyRe
 
 		NeighboursArr.Add(NeighbourRef);
 		AddPolyToMap(NeighbourRef, NeighbourPolyNode);
-
-		NeighbourCount++;
 
 		// Logging 
 		//UE_LOG(LogTemp, Log, TEXT("Neighbour %d: | Is External: %d | Portal Midpoint: %s | Ref: %llu"),

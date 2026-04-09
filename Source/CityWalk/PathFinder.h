@@ -134,6 +134,8 @@ protected:
 
 public:	
 
+	int32 NeighbourCount = 0;
+
 	/**
 	* Initializes Values in an existing Node 
 	* 
