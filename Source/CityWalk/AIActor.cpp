@@ -9,6 +9,8 @@
 
 #include "CityAIController.h"
 
+DEFINE_LOG_CATEGORY(LogBenchmark);
+
 // Sets default values
 AAIActor::AAIActor()
 {
@@ -50,7 +52,7 @@ void AAIActor::BeginPlay()
 
 	FVector GoalLocation = FVector(-1800.0f, -200.0f, 0.0f);
 
-	BenchmarkPathFinding(GetActorLocation(), GoalLocation, true, CityAIController);
+	BenchmarkPathFinding(GetActorLocation(), GoalLocation, true);
 
 	if (DestinationsArray.IsEmpty())
 	{
@@ -157,4 +159,26 @@ void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector&
 
 	BenchmarkIndex++;
 
+}
+
+void AAIActor::RunBenchmark()
+{
+	ACityAIController * AIController = Cast<ACityAIController>(GetController());
+
+	if (!AIController) return;
+
+	FVector2D MeshMin = AIController->MeshMin;
+	FVector2D MeshMax = AIController->MeshMax;
+
+	FVector Start = GetRandomVector(MeshMin.X, MeshMax.X, MeshMin.Y, MeshMax.Y, 50.0);
+	FVector Goal =  GetRandomVector(MeshMin.X, MeshMax.X, MeshMin.Y, MeshMax.Y, 50.0);
+
+	BenchmarkPathFinding(Start, Goal, false, AIController);
+
+	const int32 MaxBenchmarks = 100;
+
+	if (BenchmarkIndex >= MaxBenchmarks)
+	{
+		return;
+	}
 }

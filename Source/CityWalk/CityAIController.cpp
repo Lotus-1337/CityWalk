@@ -9,6 +9,7 @@
 #include "Portal.h"
 #include "Funnel.h"
 
+#include "Detour/DetourNavMesh.h"
 
 ACityAIController::ACityAIController()
 {
@@ -26,6 +27,8 @@ void ACityAIController::BeginPlay()
 	FActorSpawnParameters SpawnParams;
 
 	PathFinder = GetWorld()->SpawnActor<APathFinder>(PathFinderClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	CalculateMeshBoundaries();
 
 	if (!PathFinder)
 	{
@@ -125,4 +128,65 @@ double ACityAIController::FindPathAITimered(AAIActor* AI, TArray<FVector>& Arr, 
 int32 ACityAIController::GetVisitedNodes() const
 {
 	return PathFinder->NeighbourCount;
+}
+
+
+const dtNavMesh* ACityAIController::GetNavMesh() const
+{
+
+	return PathFinder == nullptr ? nullptr : PathFinder->GetDetourMesh();
+
+}
+
+void ACityAIController::CalculateMeshBoundaries()
+{
+
+	const dtNavMesh* Mesh = GetNavMesh();
+
+	if (!Mesh)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Mesh is Invalid. AAIActor::CalculateMeshBoundaries"));
+		return;
+	}
+
+	
+	float MinX = FLT_MAX;
+	float MinY = FLT_MAX;
+
+	float MaxX = -FLT_MAX;
+	float MaxY = -FLT_MAX;
+
+	float TileMinX = MinX;
+	float TileMinY = MinY;
+
+	float TileMaxX = MaxX;
+	float TileMaxY = MaxY;
+
+	for (int32 i = 0; i < Mesh->getMaxTiles(); i++)
+	{
+
+		const dtMeshTile* Tile = Mesh->getTile(i);
+
+		if (!Tile || !Tile->header)
+		{
+			continue;
+		}
+
+		TileMinX = Tile->header->bmin[0];
+		TileMinY = Tile->header->bmin[2];
+
+		TileMaxX = Tile->header->bmax[0];
+		TileMaxY = Tile->header->bmax[2];
+
+		MaxX = FMath::Max(MaxX, TileMaxX);
+		MaxY = FMath::Max(MaxY, TileMaxY);
+
+		MinX = FMath::Min(MinX, TileMinX);
+		MinY = FMath::Min(MinY, TileMinY);
+
+	}
+
+	MeshMin = FVector2D(MinX, MinY);
+	MeshMax = FVector2D(MaxX, MaxY);
+
 }

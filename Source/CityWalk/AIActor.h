@@ -73,6 +73,19 @@ public:
 	*/
 	void BenchmarkPathFinding(const FVector& StartLocation, const FVector& GoalLocation, bool bUseDestinationArray = false, ACityAIController * AIController = nullptr);
 
+	void RunBenchmark();
+
 	FORCEINLINE USkeletalMeshComponent* GetMeshComponent() const { return MeshComponent; }
 
 };
+
+
+FORCEINLINE FVector GetRandomVector(const double& MinX, const double& MaxX, const double& MinY, const double& MaxY, const double& MinZ, const double& MaxZ)
+{
+	return FVector(FMath::RandRange(MinX, MaxX), FMath::RandRange(MinY, MaxY), FMath::RandRange(MinZ, MaxZ));
+}
+
+FORCEINLINE FVector GetRandomVector(const double& MinX, const double& MaxX, const double& MinY, const double& MaxY, const double& Z)
+{
+	return FVector(FMath::RandRange(MinX, MaxX), FMath::RandRange(MinY, MaxY), Z);
+}

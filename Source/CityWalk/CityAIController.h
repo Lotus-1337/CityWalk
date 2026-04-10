@@ -10,13 +10,12 @@
 
 #include "CityAIController.generated.h"
 
-
-
-
 class APathFinder;
 class AAIActor;
 class FPortalBuilder;
 class FFunnel;
+
+class dtNavMesh;
 
 /**
 * AI Controller Receiving PathFinding Requests and running PathFinding, Portal Building and Funnel Algorithms * 
@@ -45,6 +44,14 @@ protected:
 
 	/** Object responsible for building Funneled Paths **/
 	TUniquePtr<FFunnel> Funnel;
+
+public:
+
+	UPROPERTY(VisibleAnywhere, Category = "Mesh Boundaries")
+	FVector2D MeshMin = FVector2D(-4096.0f, -4096.0f);
+
+	UPROPERTY(VisibleAnywhere, Category = "Mesh Boundaries")
+	FVector2D MeshMax = FVector2D(4096.0f, 4096.0f);
 
 protected:
 
@@ -94,6 +101,10 @@ public:
 	double FindPathTimered(const FVector& StartLocation, TArray<FVector>& Arr, const FVector& GoalLocation);
 
 	int32 GetVisitedNodes() const;
+
+	const dtNavMesh* GetNavMesh() const;
+
+	void CalculateMeshBoundaries();
 
 };
 
