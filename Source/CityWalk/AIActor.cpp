@@ -52,24 +52,16 @@ void AAIActor::BeginPlay()
 
 	FVector GoalLocation = FVector(-1800.0f, -200.0f, 0.0f);
 
-	BenchmarkPathFinding(GetActorLocation(), GoalLocation, true);
+	ScheduleBenchmark();
+
+	/*BenchmarkPathFinding(GetActorLocation(), GoalLocation, true);
 
 	if (DestinationsArray.IsEmpty())
 	{
 		return;
 	}
 
-	Destination = DestinationsArray[0];
-
-	int32 Index = 0;
-
-	for (FVector V : DestinationsArray)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Destination %d: %s"), Index, *V.ToString());
-		Index++;
-
-		DrawDebugPoint(GetWorld(), V, 5.0f, FColor::Red, false, 10.0f);
-	}
+	Destination = DestinationsArray[0];*/
 
 }
 
@@ -129,7 +121,7 @@ void AAIActor::OnFoundNewPath()
 
 }
 
-static int32 BenchmarkIndex = 0;
+static int32 BenchmarkIndex = 1;
 
 void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector& GoalLocation, bool bUseDestinationArray, ACityAIController* AIController)
 {
@@ -154,6 +146,7 @@ void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector&
 		Duration = AIController->FindPathTimered(StartLocation, DestinationsArray, GoalLocation);
 	}
 
+	BenchmarkDuration += Duration;
 
 	UE_LOG(LogBenchmark, Log, TEXT("Benchmark %d Finished. Duration in MicroSeconds: %f. VisitedNodes: %d"), BenchmarkIndex, FTimers::MicroSeconds(Duration), AIController->GetVisitedNodes());
 
@@ -179,6 +172,17 @@ void AAIActor::RunBenchmark()
 
 	if (BenchmarkIndex >= MaxBenchmarks)
 	{
+
+		UE_LOG(LogTemp, Log, TEXT("Total Benchmarks Duration: %f. Average Benchmark Duration: %f"), BenchmarkDuration, BenchmarkDuration / BenchmarkIndex)
+
 		return;
 	}
+
+	ScheduleBenchmark();
+
+}
+
+void AAIActor::ScheduleBenchmark()
+{
+	GetWorld()->GetTimerManager().SetTimer(BenchmarkTimerHandle, this, &AAIActor::RunBenchmark, 0.1f, false);
 }

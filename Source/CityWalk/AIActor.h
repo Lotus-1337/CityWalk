@@ -40,6 +40,9 @@ protected:
 
 	TArray<FVector> DestinationsArray;
 
+	UPROPERTY(VisibleAnywhere, Category = "Benchmarks")
+	double BenchmarkDuration = 0.0;
+
 public:
 	// Sets default values for this pawn's properties
 	AAIActor();
@@ -74,6 +77,10 @@ public:
 	void BenchmarkPathFinding(const FVector& StartLocation, const FVector& GoalLocation, bool bUseDestinationArray = false, ACityAIController * AIController = nullptr);
 
 	void RunBenchmark();
+
+	FTimerHandle BenchmarkTimerHandle;
+
+	void ScheduleBenchmark();
 
 	FORCEINLINE USkeletalMeshComponent* GetMeshComponent() const { return MeshComponent; }
 
