@@ -12,6 +12,7 @@ enum class EFunnelAddStatus
 	EXPANDING,
 	NARROWING,
 	INTERSECTING,
+	COLINEAR
 };
 
 /**

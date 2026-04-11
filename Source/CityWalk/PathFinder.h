@@ -30,66 +30,48 @@ public:
 		ParentRef = 0;
 	}
 
-protected:
-
 	dtPolyRef Ref = 0;
 
 	// Entrance portal midpoint
 	FVector Entrance = FVector::ZeroVector;
 
-	int32 H = 10;
 	int32 G = 1e10;
-	int32 F = 0;
+	int32 F = 1e10;
 
 	dtPolyRef ParentRef = 0;
 
 public:
 
-	FORCEINLINE void SetRef(dtPolyRef& NewRef) { Ref = NewRef; };
-
 	/** I KNOW IT LOOKS WEIRD THAT YOU HAVE TO GIVE PATHFINDER AS AN ARGUMENT
 	But I Swear is makes sense... */
 	FVector CalculateCenter(const APathFinder* PathFinder); // { Center = PathFinder->GetPolygonCentroid(&Ref); }
 
-	FORCEINLINE FVector GetEntrance() const { return Entrance; };
-
-	FORCEINLINE void SetEntrance(const FVector& NewEntrance) { Entrance = NewEntrance; };
-
-	FORCEINLINE dtPolyRef GetRef() const { return Ref; };
-
-	FORCEINLINE int32 GetH() const { return H; };
-
 	FORCEINLINE int32 GetF() const { return F; };
-
-	FORCEINLINE int32 GetG() const { return G; };
 
 	/**
 	* Claculates F Cost ( Total Cost: G + H )
 	* @param Weight: Heuretic Multiplier in F = G + H Equasion, higher values might speed up the algorithm, generating worse paths
 	**/
-	FORCEINLINE void SetF(const float &Weight = 1.0f) { F = G + (H * Weight ); };
+	FORCEINLINE void SetF(const int32& H, const float &Weight = 1.0f) { F = G + (H * Weight ); };
 
-	FORCEINLINE void SetG(const int32& NewG) { G = NewG; };
+	FORCEINLINE int32 CalculateH(const FVector& FinishLocation) { return FVector::Dist2D(Entrance, FinishLocation); };
 
-	FORCEINLINE void SetH(const FVector& FinishLocation) { H = FVector::Dist2D(Entrance, FinishLocation); };
+	FORCEINLINE void Reset() { G = 1e10; F = 1e10; ParentRef = 0; };
 
 	// Index Stuff
 
 	FORCEINLINE bool IsParentRefValid() const { return ParentRef != 0; };
 
-	FORCEINLINE dtPolyRef GetParentRef() const { return ParentRef; };
-
-	FORCEINLINE void SetParentRef(const dtPolyRef& NewRef) { ParentRef = NewRef; };
 
 	// Operators 
 
-	FORCEINLINE bool operator==(const FPolyNode* OtherNode) const { return Ref == OtherNode->GetRef(); };
+	FORCEINLINE bool operator==(const FPolyNode* OtherNode) const { return Ref == OtherNode->Ref; };
 
-	FORCEINLINE bool operator==(const FPolyNode& OtherNode) const { return Ref == OtherNode.GetRef(); };
+	FORCEINLINE bool operator==(const FPolyNode& OtherNode) const { return Ref == OtherNode.Ref; };
 
-	FORCEINLINE bool operator!=(const FPolyNode* OtherNode) const { return Ref != OtherNode->GetRef(); };
+	FORCEINLINE bool operator!=(const FPolyNode* OtherNode) const { return Ref != OtherNode->Ref; };
 	
-	FORCEINLINE bool operator!=(const FPolyNode& OtherNode) const { return Ref != OtherNode.GetRef(); };
+	FORCEINLINE bool operator!=(const FPolyNode& OtherNode) const { return Ref != OtherNode.Ref; };
 
 };
 
@@ -121,6 +103,10 @@ protected:
 	* This Allows Finding PolyNodes by their Refs 
 	*/
 	TMap<dtPolyRef, FPolyNode> PolyMap; // Can be a set
+
+public:
+
+	int32 NeighbourCount = 0;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -132,9 +118,6 @@ protected:
 
 	void AddPolyToMap(dtPolyRef& Ref, FPolyNode& Node);
 
-public:	
-
-	int32 NeighbourCount = 0;
 
 	/**
 	* Initializes Values in an existing Node 
@@ -153,8 +136,10 @@ public:
 	* 
 	* @returns An Array of Polys
 	*/
-	bool FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition);
-	
+	bool AStar(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition);
+
+	void CleanMap();
+
 	/**
 	* Goes Through Last Node's Parents to Reconstruct the Path
 	* 
@@ -182,6 +167,25 @@ public:
 	void GetClosestPoly(dtPolyRef * Poly, const FVector& Location, const FVector& Extent);
 
 	void GetNeighbours(TArray<dtPolyRef> &NeighboursArr, const dtPolyRef& Poly);
+
+public:
+
+	/** 
+	* Full Function For Pathfinding that Cleans PolyMap After Finding the Path
+	* 
+	* * Uses A* PathFinding Algorithm
+	* 
+	* @param OutArray: Path of PolyRefs is put into this array. This Array is emptied at the beggining
+	* 
+	* @returns True if Pathfinding Succeeded
+	*/
+	FORCEINLINE bool FindPath(TArray<dtPolyRef>& OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
+	{
+		bool DidSucceed = AStar(OutArray, StartingPosition, FinishPosition);
+		CleanMap();
+
+		return DidSucceed;
+	}
 
 	FORCEINLINE TArray<FPolyNode> GetEmptyArray() const
 	{

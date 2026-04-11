@@ -54,7 +54,7 @@ const dtNavMesh* APathFinder::GetDetourMesh() const
 
 }
 
-bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
+bool APathFinder::AStar(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
 {
 
 	OutArray.Empty();
@@ -86,15 +86,15 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 	}
 
 	FPolyNode StartNode;
-	StartNode.SetEntrance(StartingPosition);
-	StartNode.SetG(0);
-	StartNode.SetRef(StartRef);
+	StartNode.Entrance = StartingPosition;
+	StartNode.G = 0;
+	StartNode.Ref = StartRef;
 	AddPolyToMap(StartRef, StartNode);
 	
 	FPolyNode LastNode;
-	LastNode.SetEntrance(FinishPosition);
-	LastNode.SetG(0);
-	LastNode.SetRef(EndRef);
+	LastNode.Entrance = FinishPosition;
+	LastNode.G = 0;
+	LastNode.Ref = EndRef;
 	AddPolyToMap(EndRef, LastNode);
 
 	FPolyNode* CurrentNode = PolyMap.Find(StartRef);
@@ -109,7 +109,7 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 	OpenArr.Heapify(FCompareNodes());
 
 	OpenArr.HeapPush(CurrentNode, FCompareNodes());
-	OpenSet.Add(CurrentNode->GetRef());
+	OpenSet.Add(CurrentNode->Ref);
 
 	int32 Iterations = 0;
 
@@ -120,16 +120,16 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 		NeighbourCount++;
 
-		if (CurrentNode->GetRef() == EndNode->GetRef())
+		if (CurrentNode->Ref == EndNode->Ref)
 		{
 			UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
 			return ReconstructPath(OutArray, CurrentNode);
 		}
 
-		ClosedSet.Add(CurrentNode->GetRef());
-		OpenSet.Remove(CurrentNode->GetRef());
+		ClosedSet.Add(CurrentNode->Ref);
+		OpenSet.Remove(CurrentNode->Ref);
 
-		dtPolyRef Ref = CurrentNode->GetRef(); // GetRef() returns an rvalue ( one that is not in the memory )
+		dtPolyRef Ref = CurrentNode->Ref; // Ref returns an rvalue ( one that is not in the memory )
 
 		GetNeighbours(NeighboursArr, Ref);
 
@@ -146,16 +146,16 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 				continue;
 			}
 			
-			if (ClosedSet.Contains(Neighbour->GetRef()))
+			if (ClosedSet.Contains(Neighbour->Ref))
 			{
 				continue;
 			}
 
-			bool IsInOpen = OpenSet.Contains(Neighbour->GetRef());
+			bool IsInOpen = OpenSet.Contains(Neighbour->Ref);
 
-			int32 NewG = CurrentNode->GetG() + FVector::Dist2D(CurrentNode->GetEntrance(), Neighbour->GetEntrance());
+			int32 NewG = CurrentNode->G + FVector::Dist2D(CurrentNode->Entrance, Neighbour->Entrance);
 	
-			if (IsInOpen && NewG > Neighbour->GetG())
+			if (IsInOpen && NewG > Neighbour->G)
 			{
 				continue;
 			}
@@ -167,18 +167,18 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 				IsInOpen = false;
 			}
 
-			Neighbour->SetG(NewG);
-			Neighbour->SetH(FinishPosition);
+			Neighbour->G = NewG;
+			int32 H = Neighbour->CalculateH(FinishPosition);
 
 			static const float Weight = 1.2f;
 
-			Neighbour->SetF(Weight);
+			Neighbour->SetF(H, Weight);
 
-			Neighbour->SetParentRef(CurrentNode->GetRef());
+			Neighbour->ParentRef = CurrentNode->Ref;
 
 			OpenArr.HeapPush(Neighbour, FCompareNodes());
 
-			if (!IsInOpen) OpenSet.Add(Neighbour->GetRef());
+			if (!IsInOpen) OpenSet.Add(Neighbour->Ref);
 
 		}
 
@@ -198,14 +198,14 @@ bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* 
 	while (CurrNode)
 	{
 
-		OutArray.Add(CurrNode->GetRef());
+		OutArray.Add(CurrNode->Ref);
 
-		if (!CurrNode->IsParentRefValid() || !PolyMap.Contains(CurrNode->GetParentRef()))
+		if (!CurrNode->IsParentRefValid() || !PolyMap.Contains(CurrNode->ParentRef))
 		{
 			break;
 		}
 		
-		CurrNode = PolyMap.Find(CurrNode->GetParentRef());
+		CurrNode = PolyMap.Find(CurrNode->ParentRef);
 
 	}
 
@@ -380,8 +380,8 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, const dtPolyRe
 		FPortal Portal = FPortalBuilder::BuildPortal(&PolyInfo);
 		FPolyNode NeighbourPolyNode = FPolyNode();
 
-		NeighbourPolyNode.SetEntrance(Portal.GetPortalMiddle());
-		NeighbourPolyNode.SetRef(NeighbourRef);
+		NeighbourPolyNode.Entrance = Portal.GetPortalMiddle();
+		NeighbourPolyNode.Ref = NeighbourRef;
 
 		NeighboursArr.Add(NeighbourRef);
 		AddPolyToMap(NeighbourRef, NeighbourPolyNode);
@@ -396,7 +396,7 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, const dtPolyRe
 
 void APathFinder::InitNode(dtPolyRef& Ref, FPolyNode& Node)
 {
-	Node.SetRef(Ref);
+	Node.Ref = Ref;
 }
 
 FPolyNode APathFinder::BuildNode(dtPolyRef& Ref)
@@ -468,5 +468,20 @@ FVector APathFinder::GetPolygonCentroid(dtPolyRef* Ref) const
 	Center /= Poly->vertCount;
 
 	return Center;
+
+}
+
+void APathFinder::CleanMap()
+{
+
+	TArray<FPolyNode> NodesArray;
+	PolyMap.GenerateValueArray(NodesArray);
+
+	for (FPolyNode& Node : NodesArray)
+	{
+
+		Node.Reset();
+
+	}
 
 }

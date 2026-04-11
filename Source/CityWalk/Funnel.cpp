@@ -50,6 +50,13 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 
 		if (Apex.Equals(Goal)) break;
 
+		if (OutArray.Num() > 100)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Out Array is larger than 100. Invalidating the result."));
+			UE_LOG(LogTemp, Warning, TEXT("Apex Index : %d, RightIndex: %d, LeftIndex: %d"), ApexIndex, RightIndex, LeftIndex);
+			return false;
+		}
+
 		FPortal CurrentPortal = InArray[i];
 
 		// Add Left And Add Right return True if Apex is changed
@@ -66,7 +73,7 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 			LeftBoundary = Apex;
 			RightBoundary = Apex;
 
-			i = ApexIndex - 1;
+			i = FMath::Max(1, ApexIndex - 1);
 
 			continue;
 
@@ -89,7 +96,7 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 			LeftBoundary = Apex;
 			RightBoundary = Apex;
 
-			i = ApexIndex - 1;
+			i = FMath::Max(1, ApexIndex - 1);
 		}
 		else if (LeftStatus == EFunnelAddStatus::NARROWING)
 		{
@@ -116,22 +123,30 @@ void FFunnel::ResetIndexes(int32& ApexIndex, int32& BoundaryIndex, int32& Iterat
 
 }
 
+static const double Epsilon = 0.5;
 
 EFunnelAddStatus FFunnel::AddLeft(FVector& Apex, FVector& LeftBoundary, const FVector& RightBoundary, const FVector& NewLeftPoint) const
 {
 
-	bool IsNarrowing = Orient2D(Apex, LeftBoundary, NewLeftPoint) >= 0.0;
+	double Cross = Orient2D(Apex, LeftBoundary, NewLeftPoint);
+
+	if (FMath::Abs(Cross) < Epsilon)
+	{
+		return EFunnelAddStatus::COLINEAR;
+	}
+
+	bool IsNarrowing = Cross >= Epsilon;
 
 	if (!IsNarrowing) return EFunnelAddStatus::EXPANDING;
 
-	bool IsIntersecting = Orient2D(Apex, RightBoundary, NewLeftPoint) > 0.0;
+	bool IsIntersecting = Orient2D(Apex, RightBoundary, NewLeftPoint) > Epsilon;
 
 	if (IsIntersecting)
 	{
 		Apex = RightBoundary;
 		return EFunnelAddStatus::INTERSECTING;
 	}
-	
+
 	LeftBoundary = NewLeftPoint;
 	return EFunnelAddStatus::NARROWING;
 
@@ -140,11 +155,18 @@ EFunnelAddStatus FFunnel::AddLeft(FVector& Apex, FVector& LeftBoundary, const FV
 EFunnelAddStatus FFunnel::AddRight(FVector& Apex, FVector& RightBoundary, const FVector& LeftBoundary, const FVector& NewRightPoint) const
 {
 
-	bool IsNarrowing = Orient2D(Apex, RightBoundary, NewRightPoint) <= 0.0;
+	double Cross = Orient2D(Apex, RightBoundary, NewRightPoint);
+
+	if (FMath::Abs(Cross) < Epsilon)
+	{
+		return EFunnelAddStatus::COLINEAR;
+	}
+
+	bool IsNarrowing = Cross <= Epsilon;
 
 	if (!IsNarrowing) return EFunnelAddStatus::EXPANDING;
 
-	bool IsIntersecting = Orient2D(Apex, LeftBoundary, NewRightPoint) < 0.0;
+	bool IsIntersecting = Orient2D(Apex, LeftBoundary, NewRightPoint) < Epsilon;
 
 	if (IsIntersecting)
 	{

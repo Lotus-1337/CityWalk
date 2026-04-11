@@ -166,6 +166,8 @@ void AAIActor::RunBenchmark()
 	FVector Start = GetRandomVector(MeshMin.X, MeshMax.X, MeshMin.Y, MeshMax.Y, 50.0);
 	FVector Goal =  GetRandomVector(MeshMin.X, MeshMax.X, MeshMin.Y, MeshMax.Y, 50.0);
 
+	UE_LOG(LogTemp, Log, TEXT("Start: %s. Goal: %s"), *Start.ToString(), *Goal.ToString());
+	
 	BenchmarkPathFinding(Start, Goal, false, AIController);
 
 	const int32 MaxBenchmarks = 100;
