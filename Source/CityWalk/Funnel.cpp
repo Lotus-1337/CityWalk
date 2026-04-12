@@ -44,17 +44,19 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 	int32 RightIndex = 0;
 	int32 LeftIndex = 0;
 
+	int32 Iteration = 0;
+
 	// First Element is a Fake Portal, so we skip it.
 	for (int32 i = 1; i < InArray.Num(); i++)
 	{
 
 		if (Apex.Equals(Goal)) break;
-
+	
 		if (OutArray.Num() > 100)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Out Array is larger than 100. Invalidating the result."));
 			UE_LOG(LogTemp, Warning, TEXT("Apex Index : %d, RightIndex: %d, LeftIndex: %d"), ApexIndex, RightIndex, LeftIndex);
-			return false;
+			break;
 		}
 
 		FPortal CurrentPortal = InArray[i];

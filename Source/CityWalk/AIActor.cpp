@@ -37,6 +37,8 @@ AAIActor::AAIActor()
 
 }
 
+static int32 BenchmarkIndex = 1;
+
 // Called when the game starts or when spawned
 void AAIActor::BeginPlay()
 {
@@ -51,6 +53,8 @@ void AAIActor::BeginPlay()
 	}
 
 	FVector GoalLocation = FVector(-1800.0f, -200.0f, 0.0f);
+
+	BenchmarkIndex = 1;
 
 	ScheduleBenchmark();
 
@@ -121,8 +125,6 @@ void AAIActor::OnFoundNewPath()
 
 }
 
-static int32 BenchmarkIndex = 1;
-
 void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector& GoalLocation, bool bUseDestinationArray, ACityAIController* AIController)
 {
 
@@ -146,7 +148,11 @@ void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector&
 		Duration = AIController->FindPathTimered(StartLocation, DestinationsArray, GoalLocation);
 	}
 
-	BenchmarkDuration += Duration;
+	if (Duration != -1.0f)
+	{
+
+		BenchmarkDuration += FTimers::MicroSeconds(Duration);
+	}
 
 	UE_LOG(LogBenchmark, Log, TEXT("Benchmark %d Finished. Duration in MicroSeconds: %f. VisitedNodes: %d"), BenchmarkIndex, FTimers::MicroSeconds(Duration), AIController->GetVisitedNodes());
 

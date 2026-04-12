@@ -191,7 +191,6 @@ bool APathFinder::AStar(TArray<dtPolyRef> & OutArray, const FVector& StartingPos
 bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* LastNode)
 {
 
-
 	const FPolyNode* CurrNode = LastNode;
 
 
@@ -474,13 +473,10 @@ FVector APathFinder::GetPolygonCentroid(dtPolyRef* Ref) const
 void APathFinder::CleanMap()
 {
 
-	TArray<FPolyNode> NodesArray;
-	PolyMap.GenerateValueArray(NodesArray);
-
-	for (FPolyNode& Node : NodesArray)
+	for (auto& Node : PolyMap)
 	{
 
-		Node.Reset();
+		Node.Value.Reset();
 
 	}
 
