@@ -29,6 +29,8 @@ APathFinder::APathFinder()
 void APathFinder::BeginPlay()
 {
 	Super::BeginPlay();	
+
+	PolyMap.Reserve(1024);
 }
 
 const dtNavMesh* APathFinder::GetDetourMesh() const
@@ -57,7 +59,8 @@ const dtNavMesh* APathFinder::GetDetourMesh() const
 bool APathFinder::AStar(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
 {
 
-	OutArray.Empty();
+	OutArray.Reset();
+	OutArray.Reserve(64);
 
 	NeighbourCount = 0;
 
@@ -101,10 +104,16 @@ bool APathFinder::AStar(TArray<dtPolyRef> & OutArray, const FVector& StartingPos
 	FPolyNode* EndNode = PolyMap.Find(EndRef);
 
 	TArray<dtPolyRef> NeighboursArr;
+	NeighboursArr.Reserve(16);
 	
 	TArray<FPolyNode*> OpenArr;
-	TArray<dtPolyRef> OpenSet;
-	TArray<dtPolyRef> ClosedSet;
+	OpenArr.Reserve(256);
+
+	TSet<dtPolyRef> OpenSet;
+	OpenSet.Reserve(256);
+
+	TSet<dtPolyRef> ClosedSet;
+	ClosedSet.Reserve(128);
 
 	OpenArr.Heapify(FCompareNodes());
 
@@ -385,9 +394,6 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, const dtPolyRe
 		NeighboursArr.Add(NeighbourRef);
 		AddPolyToMap(NeighbourRef, NeighbourPolyNode);
 
-		// Logging 
-		//UE_LOG(LogTemp, Log, TEXT("Neighbour %d: | Is External: %d | Portal Midpoint: %s | Ref: %llu"),
-		//NeighbourCount, IsOutsideTile, *NeighbourPolyNode.GetEntrance().ToString(), NeighbourRef);
 	
 	}
 

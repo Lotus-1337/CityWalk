@@ -181,7 +181,22 @@ void AAIActor::RunBenchmark()
 	if (BenchmarkIndex >= MaxBenchmarks)
 	{
 
-		UE_LOG(LogTemp, Log, TEXT("Total Benchmarks Duration: %f. Average Benchmark Duration: %f"), BenchmarkDuration, BenchmarkDuration / BenchmarkIndex)
+		UE_LOG(LogBenchmark, Warning, TEXT("Just Ran %d Benchmarks: Here's the performance: "), BenchmarkIndex);
+		UE_LOG(LogBenchmark, Log, TEXT("Total Benchmarks Duration: %f. Average Benchmark Duration: %f"), BenchmarkDuration, BenchmarkDuration / BenchmarkIndex);
+
+		AIController->BenchmarksArray.Sort();
+
+		int32 BenchmarksCount = AIController->BenchmarksArray.Num() - 1;
+
+		double Median = FTimers::MicroSeconds(AIController->BenchmarksArray[BenchmarksCount * 0.5]);
+
+		double Percentile95 = FTimers::MicroSeconds(AIController->BenchmarksArray[BenchmarksCount * 0.95]);
+		double Percentile99 = FTimers::MicroSeconds(AIController->BenchmarksArray[BenchmarksCount]);
+
+		double BestBenchmark = FTimers::MicroSeconds(AIController->BenchmarksArray[0]);
+
+		UE_LOG(LogBenchmark, Log, TEXT("Median of Benchmarks: %f. BestBenchmark: %f. "), Median, BestBenchmark);
+		UE_LOG(LogBenchmark, Log, TEXT("95 Percentile: %f, 99 Percentile: %f"), Percentile95, Percentile99);
 
 		return;
 	}

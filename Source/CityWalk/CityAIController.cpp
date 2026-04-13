@@ -105,7 +105,9 @@ double ACityAIController::FindPathTimered(const FVector & StartLocation, TArray<
 
 	if (FindPath(StartLocation, Arr, GoalLocation))
 	{
-		return FPlatformTime::Seconds() - Start; // returns time of pathfinding if it succeeded
+		double Duration = FPlatformTime::Seconds() - Start;
+		BenchmarksArray.Add(Duration);
+		return Duration; // returns time of pathfinding if it succeeded
 	}
 
 	return -1.0;
@@ -118,7 +120,9 @@ double ACityAIController::FindPathAITimered(AAIActor* AI, TArray<FVector>& Arr, 
 
 	if (FindPathAI(AI, Arr, GoalLocation))
 	{
-		return FPlatformTime::Seconds() - Start; // returns time of pathfinding if it succeeded
+		double Duration = FPlatformTime::Seconds() - Start;
+		BenchmarksArray.Add(Duration);
+		return Duration; // returns time of pathfinding if it succeeded
 	}
 
 	return -1.0;

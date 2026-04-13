@@ -53,6 +53,8 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Mesh Boundaries")
 	FVector2D MeshMax = FVector2D(4096.0f, 4096.0f);
 
+	TArray<double> BenchmarksArray;
+
 protected:
 
 	virtual void BeginPlay() override;
