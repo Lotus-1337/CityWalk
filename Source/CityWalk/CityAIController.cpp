@@ -46,6 +46,7 @@ bool ACityAIController::FindPath(const FVector& StartLocation, TArray<FVector>& 
 	}
 
 	TArray<dtPolyRef> PolyArr;
+	PolyArr.Reserve(64);
 
 	PathFinder->FindPath(PolyArr, StartLocation, GoalLocation);
 
@@ -57,6 +58,7 @@ bool ACityAIController::FindPath(const FVector& StartLocation, TArray<FVector>& 
 
 
 	TArray<FPortal> PortalArray;
+	PortalArray.Reserve(PolyArr.Num() + 8);
 
 	PortalArray.Add(FPortal::FakePortal(StartLocation)); // Adding a Fake Portal of the Start
 
@@ -70,10 +72,11 @@ bool ACityAIController::FindPath(const FVector& StartLocation, TArray<FVector>& 
 		return false;
 	}
 
-	Arr.Empty();
+	Arr.Reset();
 
 	Funnel->BuildFunnelPath(Arr, PortalArray);
 
+	PathFinder->CleanNodes();
 
 	return !Arr.IsEmpty();
 }

@@ -31,6 +31,9 @@ void APathFinder::BeginPlay()
 	Super::BeginPlay();	
 
 	PolyMap.Reserve(1024);
+
+	NodesToClean.Reserve(256);
+
 }
 
 const dtNavMesh* APathFinder::GetDetourMesh() const
@@ -56,7 +59,7 @@ const dtNavMesh* APathFinder::GetDetourMesh() const
 
 }
 
-bool APathFinder::AStar(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
+bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
 {
 
 	OutArray.Reset();
@@ -119,6 +122,8 @@ bool APathFinder::AStar(TArray<dtPolyRef> & OutArray, const FVector& StartingPos
 
 	OpenArr.HeapPush(CurrentNode, FCompareNodes());
 	OpenSet.Add(CurrentNode->Ref);
+
+	NodesToClean.Add(CurrentNode);
 
 	int32 Iterations = 0;
 
@@ -186,6 +191,8 @@ bool APathFinder::AStar(TArray<dtPolyRef> & OutArray, const FVector& StartingPos
 			Neighbour->ParentRef = CurrentNode->Ref;
 
 			OpenArr.HeapPush(Neighbour, FCompareNodes());
+
+			NodesToClean.Add(Neighbour);
 
 			if (!IsInOpen) OpenSet.Add(Neighbour->Ref);
 
@@ -476,14 +483,16 @@ FVector APathFinder::GetPolygonCentroid(dtPolyRef* Ref) const
 
 }
 
-void APathFinder::CleanMap()
+void APathFinder::CleanNodes()
 {
 
-	for (auto& Node : PolyMap)
+	for (FPolyNode* Node : NodesToClean)
 	{
 
-		Node.Value.Reset();
+		Node->Reset();
 
 	}
+
+	NodesToClean.Reset();
 
 }

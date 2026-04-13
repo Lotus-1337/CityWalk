@@ -56,16 +56,24 @@ void AAIActor::BeginPlay()
 
 	BenchmarkIndex = 1;
 
-	ScheduleBenchmark();
 
-	/*BenchmarkPathFinding(GetActorLocation(), GoalLocation, true);
+	//ScheduleBenchmark();
+
+	//DestinationArray.Reserve(64);
+
+	BenchmarkPathFinding(GetActorLocation(), GoalLocation, true);
 
 	if (DestinationsArray.IsEmpty())
 	{
 		return;
 	}
 
-	Destination = DestinationsArray[0];*/
+	Destination = DestinationsArray[0];
+
+	for (FVector& V : DestinationsArray)
+	{
+		DrawDebugPoint(GetWorld(), V, 5.0f, FColor::Red, false, 10.0f);
+	}
 
 }
 
@@ -137,10 +145,12 @@ void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector&
 
 	TArray<FVector> Arr;
 
+
 	double Duration = 0.0;
 
 	if (!bUseDestinationArray)
 	{
+		Arr.Reserve(64);
 		Duration = AIController->FindPathTimered(StartLocation, Arr, GoalLocation);
 	}
 	else

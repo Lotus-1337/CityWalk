@@ -104,6 +104,8 @@ protected:
 	*/
 	TMap<dtPolyRef, FPolyNode> PolyMap; // Can be a set
 
+	TArray<FPolyNode*> NodesToClean;
+
 public:
 
 	int32 NeighbourCount = 0;
@@ -129,16 +131,6 @@ protected:
 
 
 	FPolyNode BuildNode(dtPolyRef& Ref);
-
-	/**
-	* Finds A Corridor of Polys From Starting Position to The Finish Position
-	* Uses A* PathFinding Algorithm
-	* 
-	* @returns An Array of Polys
-	*/
-	bool AStar(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition);
-
-	void CleanMap();
 
 	/**
 	* Goes Through Last Node's Parents to Reconstruct the Path
@@ -170,22 +162,19 @@ protected:
 
 public:
 
-	/** 
-	* Full Function For Pathfinding that Cleans PolyMap After Finding the Path
-	* 
-	* * Uses A* PathFinding Algorithm
-	* 
-	* @param OutArray: Path of PolyRefs is put into this array. This Array is emptied at the beggining
-	* 
-	* @returns True if Pathfinding Succeeded
+	/**
+	* Finds A Corridor of Polys From Starting Position to The Finish Position
+	* Uses A* PathFinding Algorithm
+	*
+	* @returns An Array of Polys
 	*/
-	FORCEINLINE bool FindPath(TArray<dtPolyRef>& OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
-	{
-		bool DidSucceed = AStar(OutArray, StartingPosition, FinishPosition);
-		CleanMap();
+	bool FindPath(TArray<dtPolyRef>& OutArray, const FVector& StartingPosition, const FVector& FinishPosition);
 
-		return DidSucceed;
-	}
+	/**
+	* Cleans An Array of Used Nodes.
+	* Calling this method during Pathfinding on another Thread will break the said PathFinding
+	*/
+	void CleanNodes();
 
 	FORCEINLINE TArray<FPolyNode> GetEmptyArray() const
 	{
