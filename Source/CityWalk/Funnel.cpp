@@ -36,28 +36,30 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 	FVector Apex = InArray[0].Left;
 	FVector Goal = InArray.Last().Left;
 
-	FVector LeftBoundary  = Apex;
+	FVector LeftBoundary = Apex;
 	FVector RightBoundary = Apex;
 
 	int32 ApexIndex = 0;
-	
+
 	int32 RightIndex = 0;
 	int32 LeftIndex = 0;
 
 	int32 Iteration = 0;
+	int32 MaxSafeIterations = InArray.Num() * 5;
 
 	// First Element is a Fake Portal, so we skip it.
 	for (int32 i = 1; i < InArray.Num(); i++)
 	{
 
-		if (Apex.Equals(Goal)) break;
-	
-		if (OutArray.Num() > 100)
+		if (Iteration > MaxSafeIterations)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Out Array is larger than 100. Invalidating the result."));
-			UE_LOG(LogTemp, Warning, TEXT("Apex Index : %d, RightIndex: %d, LeftIndex: %d"), ApexIndex, RightIndex, LeftIndex);
+			UE_LOG(LogTemp, Error, TEXT("Funnel Algorithm iterated more than it should have. Breaking. "));
 			break;
 		}
+
+		Iteration++;
+
+		if (Apex.Equals(Goal)) break;
 
 		FPortal CurrentPortal = InArray[i];
 
@@ -72,9 +74,7 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 
 			ApexIndex = LeftIndex;
 
-			LeftBoundary = Apex;
-			RightBoundary = Apex;
-
+			Apex = LeftBoundary;
 			i = FMath::Max(1, ApexIndex - 1);
 
 			continue;
@@ -95,17 +95,13 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 
 			ApexIndex = RightIndex;
 
-			LeftBoundary = Apex;
-			RightBoundary = Apex;
-
+			Apex = RightBoundary;
 			i = FMath::Max(1, ApexIndex - 1);
 		}
 		else if (LeftStatus == EFunnelAddStatus::NARROWING)
 		{
 			LeftIndex = i;
 		}
-
-
 
 	}
 
@@ -115,33 +111,14 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 
 }
 
-
-void FFunnel::ResetIndexes(int32& ApexIndex, int32& BoundaryIndex, int32& IterationIndex) const
-{
-
-	IterationIndex = ApexIndex;
-
-	ApexIndex = BoundaryIndex;
-
-}
-
-static const double Epsilon = 0.5;
-
 EFunnelAddStatus FFunnel::AddLeft(FVector& Apex, FVector& LeftBoundary, const FVector& RightBoundary, const FVector& NewLeftPoint) const
 {
 
-	double Cross = Orient2D(Apex, LeftBoundary, NewLeftPoint);
-
-	if (FMath::Abs(Cross) < Epsilon)
-	{
-		return EFunnelAddStatus::COLINEAR;
-	}
-
-	bool IsNarrowing = Cross >= Epsilon;
+	bool IsNarrowing = Orient2D(Apex, LeftBoundary, NewLeftPoint) >= 0.0;
 
 	if (!IsNarrowing) return EFunnelAddStatus::EXPANDING;
 
-	bool IsIntersecting = Orient2D(Apex, RightBoundary, NewLeftPoint) > Epsilon;
+	bool IsIntersecting = Orient2D(Apex, RightBoundary, NewLeftPoint) > 0.0;
 
 	if (IsIntersecting)
 	{
@@ -157,18 +134,11 @@ EFunnelAddStatus FFunnel::AddLeft(FVector& Apex, FVector& LeftBoundary, const FV
 EFunnelAddStatus FFunnel::AddRight(FVector& Apex, FVector& RightBoundary, const FVector& LeftBoundary, const FVector& NewRightPoint) const
 {
 
-	double Cross = Orient2D(Apex, RightBoundary, NewRightPoint);
-
-	if (FMath::Abs(Cross) < Epsilon)
-	{
-		return EFunnelAddStatus::COLINEAR;
-	}
-
-	bool IsNarrowing = Cross <= Epsilon;
+	bool IsNarrowing = Orient2D(Apex, RightBoundary, NewRightPoint) <= 0.0;
 
 	if (!IsNarrowing) return EFunnelAddStatus::EXPANDING;
 
-	bool IsIntersecting = Orient2D(Apex, LeftBoundary, NewRightPoint) < Epsilon;
+	bool IsIntersecting = Orient2D(Apex, LeftBoundary, NewRightPoint) < 0.0;
 
 	if (IsIntersecting)
 	{

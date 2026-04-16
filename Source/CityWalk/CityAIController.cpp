@@ -56,6 +56,8 @@ bool ACityAIController::FindPath(const FVector& StartLocation, TArray<FVector>& 
 		return false;
 	}
 
+	UE_LOG(LogTemp, Log, TEXT("Poly Arr Num: %d"), PolyArr.Num());
+
 
 	TArray<FPortal> PortalArray;
 	PortalArray.Reserve(PolyArr.Num() + 8);
@@ -66,15 +68,17 @@ bool ACityAIController::FindPath(const FVector& StartLocation, TArray<FVector>& 
 
 	PortalArray.Add(FPortal::FakePortal(GoalLocation)); // Adding a Fake Portal of the End
 
+	UE_LOG(LogTemp, Log, TEXT("Portal Array Num: %d"), PortalArray.Num());
+
 	if (PortalArray.IsEmpty() || !DidBuilderSucceed)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Portal Builder didn't return anything. Empty: %d. Returned: %d"), PortalArray.IsEmpty(), DidBuilderSucceed);
 		return false;
 	}
 
-	Arr.Reset();
-
 	Funnel->BuildFunnelPath(Arr, PortalArray);
+
+	UE_LOG(LogTemp, Log, TEXT("Funnel Arr Num: %d"), Arr.Num());
 
 	PathFinder->CleanNodes();
 

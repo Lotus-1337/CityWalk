@@ -36,11 +36,6 @@ public:
 
 protected:
 
-
-	void ResetApex(FVector& Apex, FVector& CrossingBoundary, FVector& OtherBoundary) const;
-
-	void ResetIndexes(int32& ApexIndex, int32& BoundaryIndex, int32& IterationIndex) const;
-
 	/**
 	* If the New Left Point is narrowing the funnel, it becomes the LeftBoundary,
 	* If it Intersects with Right Boundary, it becomes the Apex

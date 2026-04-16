@@ -52,7 +52,7 @@ void AAIActor::BeginPlay()
 		return;
 	}
 
-	FVector GoalLocation = FVector(-1800.0f, -200.0f, 0.0f);
+	FVector GoalLocation = FVector(1800.0f, -500.0f, 90.0f);
 
 	BenchmarkIndex = 1;
 
@@ -62,6 +62,8 @@ void AAIActor::BeginPlay()
 	//DestinationArray.Reserve(64);
 
 	BenchmarkPathFinding(GetActorLocation(), GoalLocation, true);
+
+	ScheduleBenchmark();
 
 	if (DestinationsArray.IsEmpty())
 	{
