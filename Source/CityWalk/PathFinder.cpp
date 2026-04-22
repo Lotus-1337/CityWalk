@@ -8,9 +8,13 @@
 #include "Detour/DetourNavMesh.h"
 #include "Detour/DetourNavMeshQuery.h"
 
+#include "Trace/Trace.h"
+
 #include "PortalBuilder.h"
 #include "Portal.h"
 #include "PFHelper.h"
+
+DEFINE_LOG_CATEGORY(LogProfiler);
 
 FVector FPolyNode::CalculateCenter(const APathFinder* PathFinder) 
 { 
@@ -23,14 +27,15 @@ APathFinder::APathFinder()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	PolySet = TSparseSet<dtPolyRef, Index_t, FPolyNode>(1024);
+
+
 }
 
 // Called when the game starts or when spawned
 void APathFinder::BeginPlay()
 {
 	Super::BeginPlay();	
-
-	PolyMap.Reserve(1024);
 
 	NodesToClean.Reserve(256);
 
@@ -62,6 +67,8 @@ const dtNavMesh* APathFinder::GetDetourMesh() const
 bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
 {
 
+	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder::FindPath);
+
 	OutArray.Reset();
 	OutArray.Reserve(64);
 
@@ -82,6 +89,7 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 	GetClosestPoly(&StartRef, StartingPosition, DefaultExtent);
 	GetClosestPoly(&EndRef, FinishPosition, DefaultExtent);
 
+
 	bool IsStartValid = StartRef != 0;
 	bool IsEndValid   = EndRef   != 0;
 
@@ -95,18 +103,18 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 	StartNode.Entrance = StartingPosition;
 	StartNode.G = 0;
 	StartNode.Ref = StartRef;
-	AddPolyToMap(StartRef, StartNode);
+	Index_t StartIndex = PolySet.TryAdd(StartRef, StartNode);
 	
 	FPolyNode LastNode;
 	LastNode.Entrance = FinishPosition;
 	LastNode.G = 0;
 	LastNode.Ref = EndRef;
-	AddPolyToMap(EndRef, LastNode);
+	Index_t EndIndex = PolySet.TryAdd(EndRef, LastNode);
 
-	FPolyNode* CurrentNode = PolyMap.Find(StartRef);
-	FPolyNode* EndNode = PolyMap.Find(EndRef);
+	FPolyNode* CurrentNode = PolySet.GetByIndex(StartIndex);
+	FPolyNode* EndNode	   = PolySet.GetByIndex(EndIndex);
 
-	TArray<dtPolyRef> NeighboursArr;
+	TArray<Index_t> NeighboursArr;
 	NeighboursArr.Reserve(16);
 	
 	TArray<FPolyNode*> OpenArr;
@@ -145,14 +153,15 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 		dtPolyRef Ref = CurrentNode->Ref; // Ref returns an rvalue ( one that is not in the memory )
 
+
 		GetNeighbours(NeighboursArr, Ref);
 
-		for (dtPolyRef& NeighbourRef : NeighboursArr)
+		for (Index_t& NeighbourIdx : NeighboursArr)
 		{
 
 			Iterations++;
 
-			FPolyNode *Neighbour = PolyMap.Find(NeighbourRef);
+			FPolyNode *Neighbour = PolySet.GetByIndex(NeighbourIdx);
 			
 			if (!Neighbour)
 			{
@@ -177,6 +186,7 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 			if (IsInOpen)
 			{
 				OpenArr.Remove(Neighbour);
+
 				OpenArr.Heapify(FCompareNodes());
 				IsInOpen = false;
 			}
@@ -188,7 +198,7 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 			Neighbour->SetF(H, Weight);
 
-			Neighbour->ParentRef = CurrentNode->Ref;
+			Neighbour->ParentIndex = CurrentNode->Index;
 
 			OpenArr.HeapPush(Neighbour, FCompareNodes());
 
@@ -214,13 +224,8 @@ bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* 
 	{
 
 		OutArray.Add(CurrNode->Ref);
-
-		if (!CurrNode->IsParentRefValid() || !PolyMap.Contains(CurrNode->ParentRef))
-		{
-			break;
-		}
 		
-		CurrNode = PolyMap.Find(CurrNode->ParentRef);
+		CurrNode = PolySet.GetByIndex(CurrNode->ParentIndex);
 
 	}
 
@@ -296,7 +301,7 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 
 }
 
-void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, const dtPolyRef& PolyRef)
+void APathFinder::GetNeighbours(TArray<Index_t>& NeighboursArr, const dtPolyRef& PolyRef)
 {
 
 	NeighboursArr.Empty();
@@ -398,9 +403,11 @@ void APathFinder::GetNeighbours(TArray<dtPolyRef>& NeighboursArr, const dtPolyRe
 		NeighbourPolyNode.Entrance = Portal.GetPortalMiddle();
 		NeighbourPolyNode.Ref = NeighbourRef;
 
-		NeighboursArr.Add(NeighbourRef);
-		AddPolyToMap(NeighbourRef, NeighbourPolyNode);
+		Index_t NeighbourIndexInPolySet = PolySet.TryAdd(NeighbourRef, NeighbourPolyNode);
 
+		PolySet.GetByIndex(NeighbourIndexInPolySet)->Index = NeighbourIndexInPolySet;
+
+		NeighboursArr.Add(NeighbourIndexInPolySet);
 	
 	}
 
@@ -422,17 +429,6 @@ FPolyNode APathFinder::BuildNode(dtPolyRef& Ref)
 	return Node;
 }
 
-void APathFinder::AddPolyToMap(dtPolyRef& Ref, FPolyNode& Node)
-{
-
-	if (PolyMap.Contains(Ref) || PolyMap.Num() > 10e2)
-	{
-		return;
-	}
-
-	PolyMap.Add(Ref, Node);
-
-}
 
 dtNavMeshQuery APathFinder::GetNavMeshQuery() const
 {

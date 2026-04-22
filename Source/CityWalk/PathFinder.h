@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
+#include "SparseSet.h"
+
 #include "PathFinder.generated.h"
 
 class dtNavMesh;
@@ -14,6 +16,10 @@ class APathFinder;
 
 typedef uint64_t UEType_uint64;
 typedef UEType_uint64 dtPolyRef;
+
+typedef int32 Index_t;
+
+DECLARE_LOG_CATEGORY_EXTERN(LogProfiler, Log, Log);
 
 USTRUCT()
 struct FPolyNode
@@ -25,9 +31,7 @@ public:
 
 	FPolyNode()
 	{
-		Entrance = FVector::ZeroVector;
-		Ref = 0;
-		ParentRef = 0;
+
 	}
 
 	dtPolyRef Ref = 0;
@@ -38,9 +42,8 @@ public:
 	int32 G = 1e10;
 	int32 F = 1e10;
 
-	dtPolyRef ParentRef = 0;
-
-public:
+	Index_t ParentIndex = -1;
+	Index_t Index = -1;
 
 	/** I KNOW IT LOOKS WEIRD THAT YOU HAVE TO GIVE PATHFINDER AS AN ARGUMENT
 	But I Swear is makes sense... */
@@ -56,11 +59,11 @@ public:
 
 	FORCEINLINE int32 CalculateH(const FVector& FinishLocation) { return FVector::Dist2D(Entrance, FinishLocation); };
 
-	FORCEINLINE void Reset() { G = 1e10; F = 1e10; ParentRef = 0; };
+	FORCEINLINE void Reset() { G = 1e10; F = 1e10; ParentIndex = -1; };
 
 	// Index Stuff
 
-	FORCEINLINE bool IsParentRefValid() const { return ParentRef != 0; };
+	FORCEINLINE bool IsParentIdxValid() const { return ParentIndex != -1; };
 
 
 	// Operators 
@@ -72,6 +75,8 @@ public:
 	FORCEINLINE bool operator!=(const FPolyNode* OtherNode) const { return Ref != OtherNode->Ref; };
 	
 	FORCEINLINE bool operator!=(const FPolyNode& OtherNode) const { return Ref != OtherNode.Ref; };
+
+	dtPolyRef GetKey() const { return Ref; };
 
 };
 
@@ -102,7 +107,8 @@ protected:
 	* Hash Map of All the Poly Nodes, where dtPolyRefs Are Hashed
 	* This Allows Finding PolyNodes by their Refs 
 	*/
-	TMap<dtPolyRef, FPolyNode> PolyMap; // Can be a set
+
+	TSparseSet<dtPolyRef, Index_t, FPolyNode> PolySet = TSparseSet<dtPolyRef, Index_t, FPolyNode>(1024);
 
 	TArray<FPolyNode*> NodesToClean;
 
@@ -117,9 +123,6 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	void AddPolyToMap(dtPolyRef& Ref, FPolyNode& Node);
-
 
 	/**
 	* Initializes Values in an existing Node 
@@ -158,7 +161,7 @@ protected:
 	**/
 	void GetClosestPoly(dtPolyRef * Poly, const FVector& Location, const FVector& Extent);
 
-	void GetNeighbours(TArray<dtPolyRef> &NeighboursArr, const dtPolyRef& Poly);
+	void GetNeighbours(TArray<Index_t> &NeighboursArr, const dtPolyRef& Poly);
 
 public:
 
@@ -190,3 +193,5 @@ public:
 	FVector GetPolygonCentroid(dtPolyRef* Ref) const;
 
 };
+
+
