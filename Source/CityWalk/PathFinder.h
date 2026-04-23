@@ -39,27 +39,30 @@ public:
 	// Entrance portal midpoint
 	FVector Entrance = FVector::ZeroVector;
 
-	int32 G = 1e10;
-	int32 F = 1e10;
+	float G = 1e10;
+	float F = 1e10;
 
 	Index_t ParentIndex = -1;
 	Index_t Index = -1;
+
+	bool IsInOpen = false;
+	bool IsInClosed = false;
 
 	/** I KNOW IT LOOKS WEIRD THAT YOU HAVE TO GIVE PATHFINDER AS AN ARGUMENT
 	But I Swear is makes sense... */
 	FVector CalculateCenter(const APathFinder* PathFinder); // { Center = PathFinder->GetPolygonCentroid(&Ref); }
 
-	FORCEINLINE int32 GetF() const { return F; };
+	FORCEINLINE float GetF() const { return F; };
 
 	/**
 	* Claculates F Cost ( Total Cost: G + H )
 	* @param Weight: Heuretic Multiplier in F = G + H Equasion, higher values might speed up the algorithm, generating worse paths
 	**/
-	FORCEINLINE void SetF(const int32& H, const float &Weight = 1.0f) { F = G + (H * Weight ); };
+	FORCEINLINE void SetF(const float& H, const float &Weight = 1.0f) { F = G + (H * Weight ); };
 
-	FORCEINLINE int32 CalculateH(const FVector& FinishLocation) { return FVector::Dist2D(Entrance, FinishLocation); };
+	FORCEINLINE float CalculateH(const FVector& FinishLocation) { return FVector::DistSquared2D(Entrance, FinishLocation); };
 
-	FORCEINLINE void Reset() { G = 1e10; F = 1e10; ParentIndex = -1; };
+	FORCEINLINE void Reset() { G = 1e10; F = 1e10; ParentIndex = -1; IsInOpen = false; IsInClosed = false; };
 
 	// Index Stuff
 
@@ -108,7 +111,7 @@ protected:
 	* This Allows Finding PolyNodes by their Refs 
 	*/
 
-	TSparseSet<dtPolyRef, Index_t, FPolyNode> PolySet = TSparseSet<dtPolyRef, Index_t, FPolyNode>(1024);
+	TSparseSet<dtPolyRef, Index_t, FPolyNode> PolySet;
 
 	TArray<FPolyNode*> NodesToClean;
 

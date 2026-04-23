@@ -67,7 +67,7 @@ const dtNavMesh* APathFinder::GetDetourMesh() const
 bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
 {
 
-	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder::FindPath);
+	TRACE_CPUPROFILER_EVENT_SCOPE_TEXT("APathFinder::FindPath");
 
 	OutArray.Reset();
 	OutArray.Reserve(64);
@@ -120,16 +120,9 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 	TArray<FPolyNode*> OpenArr;
 	OpenArr.Reserve(256);
 
-	TSet<dtPolyRef> OpenSet;
-	OpenSet.Reserve(256);
-
-	TSet<dtPolyRef> ClosedSet;
-	ClosedSet.Reserve(128);
-
 	OpenArr.Heapify(FCompareNodes());
 
 	OpenArr.HeapPush(CurrentNode, FCompareNodes());
-	OpenSet.Add(CurrentNode->Ref);
 
 	NodesToClean.Add(CurrentNode);
 
@@ -148,8 +141,8 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 			return ReconstructPath(OutArray, CurrentNode);
 		}
 
-		ClosedSet.Add(CurrentNode->Ref);
-		OpenSet.Remove(CurrentNode->Ref);
+		CurrentNode->IsInOpen = false;
+		CurrentNode->IsInClosed = true;
 
 		dtPolyRef Ref = CurrentNode->Ref; // Ref returns an rvalue ( one that is not in the memory )
 
@@ -169,14 +162,14 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 				continue;
 			}
 			
-			if (ClosedSet.Contains(Neighbour->Ref))
+			if (Neighbour->IsInClosed)
 			{
 				continue;
 			}
 
-			bool IsInOpen = OpenSet.Contains(Neighbour->Ref);
+			bool IsInOpen = Neighbour->IsInOpen;
 
-			int32 NewG = CurrentNode->G + FVector::Dist2D(CurrentNode->Entrance, Neighbour->Entrance);
+			float NewG = CurrentNode->G + FVector::DistSquared2D(CurrentNode->Entrance, Neighbour->Entrance);
 	
 			if (IsInOpen && NewG > Neighbour->G)
 			{
@@ -192,7 +185,7 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 			}
 
 			Neighbour->G = NewG;
-			int32 H = Neighbour->CalculateH(FinishPosition);
+			float H = Neighbour->CalculateH(FinishPosition);
 
 			static const float Weight = 1.2f;
 
@@ -200,11 +193,11 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 			Neighbour->ParentIndex = CurrentNode->Index;
 
+			Neighbour->IsInOpen = true;
+
 			OpenArr.HeapPush(Neighbour, FCompareNodes());
 
 			NodesToClean.Add(Neighbour);
-
-			if (!IsInOpen) OpenSet.Add(Neighbour->Ref);
 
 		}
 
@@ -216,6 +209,8 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* LastNode)
 {
+
+	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder_ReconstructPath);
 
 	const FPolyNode* CurrNode = LastNode;
 
@@ -248,6 +243,8 @@ void APathFinder::SwapNodes(dtPolyRef& Node1, dtPolyRef &Node2)
 void APathFinder::ReverseArray(TArray<dtPolyRef>& OutArray)
 {
 
+	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder_ReverseArray);
+
 	int32 Size = OutArray.Num() * 0.5; // MULTIPLICATION BY 0.5 IS A TOUCH FASTER THAN DIVIDING BY 2
 
 	for (int32 i = 0; i < Size; i++)
@@ -261,6 +258,8 @@ void APathFinder::ReverseArray(TArray<dtPolyRef>& OutArray)
 
 void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, const FVector& Extent)
 {
+
+	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder_GetClosestPoly);
 
 	UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
 
@@ -303,6 +302,8 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 
 void APathFinder::GetNeighbours(TArray<Index_t>& NeighboursArr, const dtPolyRef& PolyRef)
 {
+
+	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder_GetNeighbours);
 
 	NeighboursArr.Empty();
 
