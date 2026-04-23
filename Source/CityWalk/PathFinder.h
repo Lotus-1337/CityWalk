@@ -83,17 +83,50 @@ public:
 
 };
 
+USTRUCT()
+struct FOpenNode
+{
+
+	GENERATED_BODY()
+
+	FOpenNode(FPolyNode* NewNode, const float& NewF, const float& NewG)
+	{
+		Node = NewNode;
+		F = NewF;
+		G = NewG;
+	}
+
+	FOpenNode()
+	{
+		
+	}
+
+	FPolyNode* Node = nullptr;
+	float F = 1e10;
+	float G = 1e10;
+
+	/**
+	* This Function checks if G == Node->G 
+	* AKA if the node is up to date.
+	*/
+	FORCEINLINE bool IsValid() const
+	{
+		return Node->G == G;
+	}
+
+};
+
 struct FCompareNodes
 {
 
-	FORCEINLINE bool operator()(const FPolyNode& A, const FPolyNode& B) const
+	FORCEINLINE bool operator()(const FOpenNode& A, const FOpenNode& B) const
 	{
-		return A.GetF() < B.GetF();
+		return A.F < B.F;
 	}
 
-	FORCEINLINE bool operator()(FPolyNode& A, FPolyNode& B) const
+	FORCEINLINE bool operator()(FOpenNode& A, FOpenNode& B) const
 	{
-		return A.GetF() < B.GetF();
+		return A.F < B.F;
 	}
 
 };

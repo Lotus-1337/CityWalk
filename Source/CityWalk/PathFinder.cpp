@@ -117,23 +117,32 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 	TArray<Index_t> NeighboursArr;
 	NeighboursArr.Reserve(16);
 	
-	TArray<FPolyNode*> OpenArr;
+	TArray<FOpenNode> OpenArr;
 	OpenArr.Reserve(256);
 
 	OpenArr.Heapify(FCompareNodes());
 
-	OpenArr.HeapPush(CurrentNode, FCompareNodes());
+	OpenArr.HeapPush(FOpenNode(CurrentNode, CurrentNode->F, CurrentNode->G), FCompareNodes());
 
 	NodesToClean.Add(CurrentNode);
 
 	int32 Iterations = 0;
 
+	FOpenNode CurrTempNode;
+
 	while (!OpenArr.IsEmpty())
 	{
 
-		OpenArr.HeapPop(CurrentNode, FCompareNodes());
+		OpenArr.HeapPop(CurrTempNode, FCompareNodes());
+
+		if (!CurrTempNode.IsValid())
+		{
+			continue;
+		}
 
 		NeighbourCount++;
+
+		CurrentNode = CurrTempNode.Node;
 
 		if (CurrentNode->Ref == EndNode->Ref)
 		{
@@ -176,14 +185,6 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 				continue;
 			}
 
-			if (IsInOpen)
-			{
-				OpenArr.Remove(Neighbour);
-
-				OpenArr.Heapify(FCompareNodes());
-				IsInOpen = false;
-			}
-
 			Neighbour->G = NewG;
 			float H = Neighbour->CalculateH(FinishPosition);
 
@@ -195,7 +196,7 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 			Neighbour->IsInOpen = true;
 
-			OpenArr.HeapPush(Neighbour, FCompareNodes());
+			OpenArr.HeapPush(FOpenNode(Neighbour, Neighbour->F, Neighbour->G), FCompareNodes());
 
 			NodesToClean.Add(Neighbour);
 
