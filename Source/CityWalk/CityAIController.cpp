@@ -34,6 +34,37 @@ void ACityAIController::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("PathFinder is invalid. "));
 	}
+
+	SchedulePathFinding();
+
+}
+
+void ACityAIController::ProcessPathFinding()
+{
+
+	// Warning. Changing this variable highly impacts performance.
+	const int32 MaxPathFindingsPerFrame = 16;
+
+	for (int32 i = 0; i < MaxPathFindingsPerFrame; i++)
+	{
+
+		FPathRequest Request;
+		if (!AIQueue.Dequeue(Request))
+		{
+			break;
+		}
+
+		AAIActor* AI = Request.AI;
+
+		FindPathAI(AI, &AI->DestinationsArray, Request.Goal);
+
+		AI->OnFoundNewPath();
+
+	}
+
+	// Schedules This function for the next tick, so it's repeated every tick.
+	SchedulePathFinding();
+
 }
 
 
@@ -85,7 +116,7 @@ bool ACityAIController::FindPath(const FVector& StartLocation, TArray<FVector>& 
 	return !Arr.IsEmpty();
 }
 
-bool ACityAIController::FindPathAI(AAIActor* AI, TArray<FVector>& Arr, const FVector& GoalLocation)
+bool ACityAIController::FindPathAI(AAIActor* AI, TArray<FVector>* Arr, const FVector& GoalLocation)
 {
 
 	if (!AI)
@@ -94,7 +125,7 @@ bool ACityAIController::FindPathAI(AAIActor* AI, TArray<FVector>& Arr, const FVe
 		return false;
 	}
 	
-	if (!FindPath(AI->GetActorLocation(), Arr, GoalLocation))
+	if (!FindPath(AI->GetActorLocation(), *Arr, GoalLocation))
 	{
 		return false;
 	}
@@ -120,7 +151,7 @@ double ACityAIController::FindPathTimered(const FVector & StartLocation, TArray<
 	return -1.0;
 }
 
-double ACityAIController::FindPathAITimered(AAIActor* AI, TArray<FVector>& Arr, const FVector& GoalLocation)
+double ACityAIController::FindPathAITimered(AAIActor* AI, TArray<FVector>* Arr, const FVector& GoalLocation)
 {
 
 	double Start = FPlatformTime::Seconds();

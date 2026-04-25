@@ -67,8 +67,6 @@ const dtNavMesh* APathFinder::GetDetourMesh() const
 bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
 {
 
-	TRACE_CPUPROFILER_EVENT_SCOPE_TEXT("APathFinder::FindPath");
-
 	OutArray.Reset();
 	OutArray.Reserve(64);
 
@@ -196,6 +194,8 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 			Neighbour->IsInOpen = true;
 
+			// Adding a new OpenNode. Neighbour->G has been changed, so if a node with THIS FPolyNode* Neighbour
+			// is old now. It's being skipped. 
 			OpenArr.HeapPush(FOpenNode(Neighbour, Neighbour->F, Neighbour->G), FCompareNodes());
 
 			NodesToClean.Add(Neighbour);
@@ -210,8 +210,6 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* LastNode)
 {
-
-	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder_ReconstructPath);
 
 	const FPolyNode* CurrNode = LastNode;
 
@@ -244,8 +242,6 @@ void APathFinder::SwapNodes(dtPolyRef& Node1, dtPolyRef &Node2)
 void APathFinder::ReverseArray(TArray<dtPolyRef>& OutArray)
 {
 
-	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder_ReverseArray);
-
 	int32 Size = OutArray.Num() * 0.5; // MULTIPLICATION BY 0.5 IS A TOUCH FASTER THAN DIVIDING BY 2
 
 	for (int32 i = 0; i < Size; i++)
@@ -259,8 +255,6 @@ void APathFinder::ReverseArray(TArray<dtPolyRef>& OutArray)
 
 void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, const FVector& Extent)
 {
-
-	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder_GetClosestPoly);
 
 	UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
 
@@ -303,8 +297,6 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 
 void APathFinder::GetNeighbours(TArray<Index_t>& NeighboursArr, const dtPolyRef& PolyRef)
 {
-
-	TRACE_CPUPROFILER_EVENT_SCOPE(APathFinder_GetNeighbours);
 
 	NeighboursArr.Empty();
 

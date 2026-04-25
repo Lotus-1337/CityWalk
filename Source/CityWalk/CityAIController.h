@@ -17,6 +17,27 @@ class FFunnel;
 
 class dtNavMesh;
 
+USTRUCT()
+struct FPathRequest
+{
+
+	GENERATED_BODY()
+
+public:
+
+	FPathRequest(AAIActor* NewAI, const FVector& NewGoal)
+	{
+		AI = NewAI;
+		Goal = NewGoal;
+	}
+
+	FPathRequest() {}
+
+	AAIActor* AI = nullptr;
+	FVector Goal = FVector::ZeroVector;
+
+};
+
 /**
 * AI Controller Receiving PathFinding Requests and running PathFinding, Portal Building and Funnel Algorithms * 
 */
@@ -45,6 +66,10 @@ protected:
 	/** Object responsible for building Funneled Paths **/
 	TUniquePtr<FFunnel> Funnel;
 
+	TQueue<FPathRequest> AIQueue;
+
+	FTimerHandle PFTimerHandle;
+
 public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Mesh Boundaries")
@@ -59,8 +84,14 @@ protected:
 
 	virtual void BeginPlay() override;
 
-public:
+	/**
+	* Performs A* Pathfinding Algorithm for X First AI's in the Queue
+	* 
+	* Very Performance Heavy Method. It's performed EVERY TICK 
+	*/
+	void ProcessPathFinding();
 
+public:
 
 	/**
 	* Finds the most optimal Path from AI's Location to Goal
@@ -71,7 +102,7 @@ public:
 	* 
 	* @returns Whether PathFinding was successfull
 	*/
-	bool FindPathAI(AAIActor* AI, TArray<FVector>& Arr, const FVector& GoalLocation);
+	bool FindPathAI(AAIActor* AI, TArray<FVector>* Arr, const FVector& GoalLocation);
 
 	/**
 	* Finds the most optimal Path from AI's Location to Goal
@@ -91,7 +122,7 @@ public:
 	* 
 	* @returns Time PathFinding took measured in seconds
 	*/
-	double FindPathAITimered(AAIActor* AI, TArray<FVector>& Arr, const FVector& GoalLocation);
+	double FindPathAITimered(AAIActor* AI, TArray<FVector>* Arr, const FVector& GoalLocation);
 
 	/**
 	* Finds The most optimal Path from AI's Location to Goal
@@ -107,6 +138,16 @@ public:
 	const dtNavMesh* GetNavMesh() const;
 
 	void CalculateMeshBoundaries();
+
+	FORCEINLINE void RequestPathFinding(FPathRequest& Request)
+	{
+		AIQueue.Enqueue(Request);
+	}
+
+	FORCEINLINE void SchedulePathFinding()
+	{
+		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ACityAIController::ProcessPathFinding);
+	}
 
 };
 

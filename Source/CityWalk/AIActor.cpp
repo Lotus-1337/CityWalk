@@ -61,22 +61,11 @@ void AAIActor::BeginPlay()
 
 	//DestinationArray.Reserve(64);
 
-	BenchmarkPathFinding(GetActorLocation(), GoalLocation, true);
+	ACityAIController* AIController = Cast<ACityAIController>(GetController());
 
-	ScheduleBenchmark();
+	FPathRequest Request = FPathRequest(this, GoalLocation);
 
-	if (DestinationsArray.IsEmpty())
-	{
-		return;
-	}
-
-	Destination = DestinationsArray[0];
-
-	for (FVector& V : DestinationsArray)
-	{
-		DrawDebugPoint(GetWorld(), V, 5.0f, FColor::Red, false, 10.0f);
-	}
-
+	AIController->RequestPathFinding(Request);
 }
 
 // Called every frame
@@ -115,8 +104,6 @@ void AAIActor::MoveOnPath()
 	{
 		DestinationIndex++;
 	}
-
-	
 
 	Destination = DestinationsArray[DestinationIndex];
 	

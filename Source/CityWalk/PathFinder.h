@@ -231,3 +231,15 @@ public:
 };
 
 
+/**
+* 
+* Dev Note:
+* 
+*	A* with Performance Tracing used to take ~150 MicroSeconds.
+*	After Removing Sets A* time went down to ~90 MicroSeconds. 
+*	Talking about median time here. Unfortunately I couldn't eliminate nor neutralize 99 Percentile Times
+* 
+*	Key thing here is that I was Using Performance Tracing along with all my performance tracking code.
+*	It's important to acknowledge that UE's Profiler Trace calls take time. Pathfinding without it took ~ 100 - 120 MicroSeconds on Median.
+* 
+*/

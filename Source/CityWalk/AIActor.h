@@ -19,6 +19,8 @@ class CITYWALK_API AAIActor : public APawn
 {
 	GENERATED_BODY()
 
+	friend class ACityAIController;
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
