@@ -8,13 +8,14 @@
 
 #include "Camera/CameraComponent.h"
 
-#include "PathFinder.h"
+#include "AIActor.h"
+#include "PathFindingSubsystem.h"
 
 // Sets default values
 AWalkerCharacter::AWalkerCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	GetMesh()->SetupAttachment(RootComponent);
 
@@ -41,7 +42,37 @@ void AWalkerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AddControllerPitchInput(-90);
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	AAIActor* AI = GetWorld()->SpawnActor<AAIActor>(AAIActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
+
+	if (!AI)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AI is nullptr. "));
+		return;
+	}
+
+	UPathFindingSubsystem* PFSubsystem = GetWorld()->GetSubsystem<UPathFindingSubsystem>();
+
+	if (!PFSubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Pathfinding Subsystem is nullptr. AAIActor::BeginPlay "));
+		return;
+	}
+
+	FVector2D Min = PFSubsystem->MeshMin;
+	FVector2D Max = PFSubsystem->MeshMax;
+
+	int32 MaxAgentNum = 32;
+
+	for (int32 i = 1; i < MaxAgentNum; i++)
+	{
+
+		AI = GetWorld()->SpawnActor<AAIActor>(AAIActor::StaticClass(), GetRandomVector(Min.X, Max.X, Min.Y, Max.Y, 90.0f, 90.0f), FRotator::ZeroRotator, Params);
+
+
+	}
 	
 }
 

@@ -11,6 +11,7 @@ class USkeletalMeshComponent;
 class UCapsuleComponent;
 
 class ACityAIController;
+class UPathFindingSubsystem;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogBenchmark, All, All)
 
@@ -20,6 +21,7 @@ class CITYWALK_API AAIActor : public APawn
 	GENERATED_BODY()
 
 	friend class ACityAIController;
+	friend class UPathFindingSubsystem;
 
 protected:
 
@@ -76,7 +78,7 @@ public:
 	* @param Controller: One can give the controller to speed up the process a little bit
 	*
 	*/
-	void BenchmarkPathFinding(const FVector& StartLocation, const FVector& GoalLocation, bool bUseDestinationArray = false, ACityAIController * AIController = nullptr);
+	void BenchmarkPathFinding(const FVector& StartLocation, const FVector& GoalLocation, bool bUseDestinationArray = false, UPathFindingSubsystem * PFSubsystem = nullptr);
 
 	void RunBenchmark();
 
