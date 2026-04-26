@@ -29,6 +29,9 @@ protected:
 	int32 MovementSpeed = 100;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	FVector MovementVector;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	bool IsInTheAir = false;
 
 public:	
@@ -43,13 +46,13 @@ protected:
 
 protected:
 
-	void ExecuteFalling();
-
 	void Fall();
 
 public:	
 
-	void Move(FVector &MovementVector);
+	void Move();
+
+	void AddMovementInput(const FVector& MovementVector);
 
 	void Jump();
 

@@ -35,31 +35,10 @@ void UAIMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickTy
 
 	fDeltaTime = DeltaTime;
 
-	ExecuteFalling();
-
-}
-
-void UAIMovementComponent::ExecuteFalling()
-{
 	Fall();
+	Move();
 
-	FVector ActorLocation = GetOwner()->GetActorLocation();
-	ActorLocation.Z += ZVelocity * fDeltaTime;
-
-	FHitResult Hit;
-
-	GetOwner()->SetActorLocation(ActorLocation, true, &Hit);
-
-	if (IsNearlyZero(Hit.ImpactNormal.Z))
-	{
-		IsInTheAir = true;
-		return;
-	}
-
-	IsInTheAir = false;
-	ZVelocity = 0.0;
 }
-
 void UAIMovementComponent::Jump()
 {
 
@@ -75,7 +54,10 @@ void UAIMovementComponent::Jump()
 void UAIMovementComponent::Fall()
 {
 
-	if (!IsInTheAir) { return; }
+	if (!IsInTheAir) 
+	{
+		return; 
+	}
 
 	float FallingMultiplier = 10.0f;
 
@@ -83,17 +65,37 @@ void UAIMovementComponent::Fall()
 
 }
 
-void UAIMovementComponent::Move(FVector& MovementVector)
+
+void UAIMovementComponent::AddMovementInput(const FVector& NewMovementVector)
+{
+
+	MovementVector.X = NewMovementVector.X;
+	MovementVector.Y = NewMovementVector.Y;
+
+}
+
+void UAIMovementComponent::Move()
 {
 
 	FVector NewLocation = GetOwner()->GetActorLocation();
 
 	NewLocation.X += MovementVector.X * MovementSpeed * fDeltaTime;
 	NewLocation.Y += MovementVector.Y * MovementSpeed * fDeltaTime;
+	NewLocation.Z += ZVelocity * fDeltaTime;
 
 	FHitResult Hit;
 
 	bool bDidSucceed = GetOwner()->SetActorLocation(NewLocation, true, &Hit);
+
+	if (IsNearlyZero(Hit.ImpactNormal.Z))
+	{
+		IsInTheAir = true;
+	}
+	else
+	{
+		IsInTheAir = false;
+		ZVelocity = 0.0;
+	}
 
 	if (bDidSucceed) // if the move was succesfull, we're returning
 	{

@@ -82,11 +82,16 @@ void AAIActor::MoveAI()
 	MoveOnPath();
 
 	FVector MovementVector = Destination - GetActorLocation();
+	MovementVector.Z = 0.0f;
 
 	FVector NormalizedVector = MovementVector.GetSafeNormal();
 
-	MovementComponent->Move(NormalizedVector);
-	MovementComponent->Rotate(NormalizedVector.Rotation());
+	MovementComponent->AddMovementInput(NormalizedVector);
+	
+	// Not calculating Pitch and Roll for a little performance boost
+	FRotator NewRotation = FRotator(0.0f, FMath::RadiansToDegrees(FMath::Atan2(NormalizedVector.Y, NormalizedVector.X)), 0.0f);
+
+	MovementComponent->Rotate(NewRotation);
 
 }
 
@@ -99,7 +104,12 @@ void AAIActor::MoveOnPath()
 	
 	float MaxDistance = 50.0f;
 
-	if (FVector::Dist2D(GetActorLocation(), Destination) < MaxDistance && DestinationsArray.IsValidIndex(DestinationIndex + 1))
+	if (!DestinationsArray.IsValidIndex(DestinationIndex + 1)) // MicroOptimsation, no unnecessary Dist2D checking.
+	{
+		return;
+	}
+
+	if (FVector::Dist2D(GetActorLocation(), Destination) < MaxDistance)
 	{
 		DestinationIndex++;
 	}
