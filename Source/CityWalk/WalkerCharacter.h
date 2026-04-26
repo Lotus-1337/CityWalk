@@ -9,6 +9,8 @@
 class UCameraComponent;
 class UInputAction;
 
+class AAIActor;
+
 UCLASS()
 class CITYWALK_API AWalkerCharacter : public ACharacter
 {
@@ -33,6 +35,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputMappingContext* CameraMappingContext;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	TSubclassOf<AAIActor> AIClass;
 
 public:
 	// Sets default values for this character's properties

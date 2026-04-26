@@ -18,10 +18,9 @@ UPathFindingSubsystem::UPathFindingSubsystem()
 
 UPathFindingSubsystem::~UPathFindingSubsystem() = default;
 
-void UPathFindingSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UPathFindingSubsystem::OnWorldBeginPlay(UWorld& World)
 {
-
-	Super::Initialize(Collection);
+	Super::OnWorldBeginPlay(World);
 
 
 	FActorSpawnParameters SpawnParams;
@@ -29,14 +28,17 @@ void UPathFindingSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	UE_LOG(LogTemp, Log, TEXT("Spawning PathFinder. "));
 
-	PathFinder = GetWorld()->SpawnActor<APathFinder>(PathFinderClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	PathFinder = GetWorld()->SpawnActor<APathFinder>(APathFinder::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
-	CalculateMeshBoundaries();
 
 	if (!PathFinder)
 	{
 		UE_LOG(LogTemp, Error, TEXT("PathFinder is invalid. "));
 	}
+
+	FTimerManager TimerManager;
+
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UPathFindingSubsystem::CalculateMeshBoundaries);
 
 	SchedulePathFinding();
 
@@ -46,7 +48,7 @@ void UPathFindingSubsystem::ProcessPathFinding()
 {
 
 	// Warning. Changing this variable highly impacts performance.
-	const int32 MaxPathFindingsPerFrame = 16;
+	const int32 MaxPathFindingsPerFrame = 8;
 
 	for (int32 i = 0; i < MaxPathFindingsPerFrame; i++)
 	{
@@ -90,8 +92,6 @@ bool UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVecto
 		return false;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Poly Arr Num: %d"), PolyArr.Num());
-
 
 	TArray<FPortal> PortalArray;
 	PortalArray.Reserve(PolyArr.Num() + 8);
@@ -102,8 +102,6 @@ bool UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVecto
 
 	PortalArray.Add(FPortal::FakePortal(GoalLocation)); // Adding a Fake Portal of the End
 
-	UE_LOG(LogTemp, Log, TEXT("Portal Array Num: %d"), PortalArray.Num());
-
 	if (PortalArray.IsEmpty() || !DidBuilderSucceed)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Portal Builder didn't return anything. Empty: %d. Returned: %d"), PortalArray.IsEmpty(), DidBuilderSucceed);
@@ -111,8 +109,6 @@ bool UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVecto
 	}
 
 	Funnel->BuildFunnelPath(Arr, PortalArray);
-
-	UE_LOG(LogTemp, Log, TEXT("Funnel Arr Num: %d"), Arr.Num());
 
 	PathFinder->CleanNodes();
 

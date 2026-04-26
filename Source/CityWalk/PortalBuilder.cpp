@@ -145,8 +145,6 @@ const dtPolyRef FPortalBuilder::GetRefOutsideTile(const FPolyInfo* PolyInfo, con
 
 	}
 
-	UE_LOG(LogTemp, Error, TEXT("The Said Neighbour of Index: %d Has not been Found. FPortalBuilder::GetRefOutsideTile"), Index);
-
 	return 0;
 
 }

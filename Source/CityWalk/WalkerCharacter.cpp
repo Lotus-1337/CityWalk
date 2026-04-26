@@ -15,7 +15,7 @@
 AWalkerCharacter::AWalkerCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	GetMesh()->SetupAttachment(RootComponent);
 
@@ -45,7 +45,7 @@ void AWalkerCharacter::BeginPlay()
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	AAIActor* AI = GetWorld()->SpawnActor<AAIActor>(AAIActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
+	AAIActor* AI = GetWorld()->SpawnActor<AAIActor>(AIClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
 
 	if (!AI)
 	{
@@ -64,22 +64,42 @@ void AWalkerCharacter::BeginPlay()
 	FVector2D Min = PFSubsystem->MeshMin;
 	FVector2D Max = PFSubsystem->MeshMax;
 
-	int32 MaxAgentNum = 32;
+	int32 MaxAgentNum = 100;
 
 	for (int32 i = 1; i < MaxAgentNum; i++)
 	{
 
-		AI = GetWorld()->SpawnActor<AAIActor>(AAIActor::StaticClass(), GetRandomVector(Min.X, Max.X, Min.Y, Max.Y, 90.0f, 90.0f), FRotator::ZeroRotator, Params);
+		FVector RandomVector = GetRandomVector(Min.X, Max.X, Min.Y, Max.Y, 90.0f, 90.0f);
+		RandomVector.Z = 90.0f;
+
+		AI = GetWorld()->SpawnActor<AAIActor>(AIClass, RandomVector, FRotator::ZeroRotator, Params);
 
 
 	}
 	
 }
 
+static double TotalDeltaTime = 0.0;
+static double HowManyTicks = 0.0;
+
+static double MaxFPS = 0.0;
+static double MinFPS = 1e10;
+
 // Called every frame
 void AWalkerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	HowManyTicks += 1;
+	TotalDeltaTime += DeltaTime;
+
+	double FPS = 1 / DeltaTime;
+	double AverageFPS = HowManyTicks / TotalDeltaTime;
+
+	MaxFPS = FMath::Max(FPS, MaxFPS);
+	MinFPS = FMath::Min(FPS, MinFPS);
+
+	UE_LOG(LogTemp, Log, TEXT("FPS: %f. Average FPS: %f. Min FPS: %f. Max FPS: %f"), FPS, AverageFPS, MinFPS, MaxFPS);
 
 }
 

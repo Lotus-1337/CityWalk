@@ -126,7 +126,7 @@ void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector&
 
 	if (!PFSubsystem)
 	{
-		UPathFindingSubsystem* PFSubsystem = GetWorld()->GetSubsystem<UPathFindingSubsystem>();
+		PFSubsystem = GetWorld()->GetSubsystem<UPathFindingSubsystem>();
 
 		if (!PFSubsystem) return;
 	}

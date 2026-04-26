@@ -74,7 +74,7 @@ public:
 
 protected:
 
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void OnWorldBeginPlay(UWorld& World) override;
 
 	/**
 	* Performs A* Pathfinding Algorithm for X First AI's in the Queue
