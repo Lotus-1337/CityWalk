@@ -11,6 +11,12 @@
 #include "AIActor.h"
 #include "PathFindingSubsystem.h"
 
+static double TotalDeltaTime = 0.0;
+static double HowManyTicks = 0.0;
+
+static double MaxFPS = 0.0;
+static double MinFPS = 1e10;
+
 // Sets default values
 AWalkerCharacter::AWalkerCharacter()
 {
@@ -76,14 +82,14 @@ void AWalkerCharacter::BeginPlay()
 
 
 	}
-	
+
+	TotalDeltaTime = 0.0;
+	HowManyTicks = 0.0;
+
+	MaxFPS = 0.0;
+	MinFPS = 1e10;
+
 }
-
-static double TotalDeltaTime = 0.0;
-static double HowManyTicks = 0.0;
-
-static double MaxFPS = 0.0;
-static double MinFPS = 1e10;
 
 // Called every frame
 void AWalkerCharacter::Tick(float DeltaTime)
