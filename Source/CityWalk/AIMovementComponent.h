@@ -9,6 +9,8 @@
 class USkeletalMeshComponent;
 class UCapsuleComponent;
 
+class AAIActor;
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CITYWALK_API UAIMovementComponent : public UActorComponent
@@ -59,6 +61,8 @@ public:
 	void Rotate(const FRotator& NewRotation);
 
 	FORCEINLINE void SetMovementSpeed(const int32& NewSpeed) { MovementSpeed = NewSpeed; }
+
+	FORCEINLINE double GetMovementScalar() const { return fDeltaTime * MovementSpeed; }
 
 
 };

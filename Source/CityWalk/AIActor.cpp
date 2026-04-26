@@ -53,7 +53,8 @@ void AAIActor::BeginPlay()
 	FVector2D Min = PFSubsystem->MeshMin;
 	FVector2D Max = PFSubsystem->MeshMax;
 
-	FVector GoalLocation = GetRandomVector(Min.X, Max.X, Min.Y, Max.Y, 90.0f, 90.0f);
+	FVector GoalLocation = GetRandomVector(Min.X, Max.X, Min.Y, Max.Y, 90.0f);
+	
 
 	BenchmarkIndex = 1;
 
@@ -72,8 +73,12 @@ void AAIActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	MoveAI();
+	if (State == EAIState::Idle)
+	{
+		return;
+	}
 
+	MoveAI();
 }
 
 void AAIActor::MoveAI()
@@ -81,8 +86,22 @@ void AAIActor::MoveAI()
 
 	MoveOnPath();
 
-	FVector MovementVector = Destination - GetActorLocation();
-	MovementVector.Z = 0.0f;
+	FVector ActorLocation = GetActorLocation();
+
+	double Distance = FVector::DistSquared2D(ActorLocation, DestinationsArray.Last());
+
+	const double MaxDistance = FMath::Square(MovementComponent->GetMovementScalar());
+
+	// Setting the Location to Destination to avoid random movement close to destination. 
+	if (Distance < MaxDistance)
+	{
+		State = EAIState::Idle;
+		MovementComponent->MovementVector = FVector::ZeroVector;
+		return;
+	}
+
+	FVector MovementVector = Destination - ActorLocation;
+	MovementVector.Z = 0.0;
 
 	FVector NormalizedVector = MovementVector.GetSafeNormal();
 
@@ -95,26 +114,30 @@ void AAIActor::MoveAI()
 
 }
 
-void AAIActor::MoveOnPath()
+double AAIActor::MoveOnPath()
 {
 	if (DestinationsArray.IsEmpty() || !DestinationsArray.IsValidIndex(DestinationIndex))
 	{
-		return;
+		return -10;
 	}
 	
 	float MaxDistance = 50.0f;
 
 	if (!DestinationsArray.IsValidIndex(DestinationIndex + 1)) // MicroOptimsation, no unnecessary Dist2D checking.
 	{
-		return;
+		return -10;
 	}
 
-	if (FVector::Dist2D(GetActorLocation(), Destination) < MaxDistance)
+	double Distance = FVector::Dist2D(GetActorLocation(), Destination);
+
+	if (Distance < MaxDistance)
 	{
 		DestinationIndex++;
 	}
 
 	Destination = DestinationsArray[DestinationIndex];
+
+	return Distance;
 	
 
 }
@@ -126,6 +149,8 @@ void AAIActor::OnFoundNewPath()
 	{
 		return;
 	}
+
+	State = EAIState::Walking;
 
 	Destination = DestinationsArray[0];
 

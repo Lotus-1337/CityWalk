@@ -35,7 +35,7 @@ void UAIMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickTy
 
 	fDeltaTime = DeltaTime;
 
-	Fall();
+	//Fall();
 	Move();
 
 }
@@ -77,7 +77,8 @@ void UAIMovementComponent::AddMovementInput(const FVector& NewMovementVector)
 void UAIMovementComponent::Move()
 {
 
-	FVector NewLocation = GetOwner()->GetActorLocation();
+	FVector OwnerLocation = GetOwner()->GetActorLocation();
+	FVector NewLocation = OwnerLocation;
 
 	NewLocation.X += MovementVector.X * MovementSpeed * fDeltaTime;
 	NewLocation.Y += MovementVector.Y * MovementSpeed * fDeltaTime;
@@ -97,6 +98,7 @@ void UAIMovementComponent::Move()
 		ZVelocity = 0.0;
 	}
 
+
 	if (bDidSucceed) // if the move was succesfull, we're returning
 	{
 		return ;
@@ -105,6 +107,8 @@ void UAIMovementComponent::Move()
 	const static float ImpactScalar = 5.0f;
 
 	NewLocation += Hit.ImpactNormal * ImpactScalar;
+
+	if (!IsInTheAir) { NewLocation.Z = OwnerLocation.Z + Hit.ImpactNormal.Z; }
 
 	GetOwner()->SetActorLocation(NewLocation, true, &Hit);
 

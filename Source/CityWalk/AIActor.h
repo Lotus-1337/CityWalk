@@ -15,6 +15,16 @@ class UPathFindingSubsystem;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogBenchmark, All, All)
 
+UENUM()
+enum class EAIState
+{
+
+	Idle,
+	Walking,
+	Working
+
+};
+
 UCLASS()
 class CITYWALK_API AAIActor : public APawn
 {
@@ -47,6 +57,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Benchmarks")
 	double BenchmarkDuration = 0.0;
 
+	UPROPERTY(VisibleAnywhere, Category = "AI State")
+	EAIState State = EAIState::Idle;
+
 public:
 	// Sets default values for this pawn's properties
 	AAIActor();
@@ -55,8 +68,11 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// Method responsible for changing the destination so the most relevant is actively chosen
-	void MoveOnPath();
+	/*
+	* Method responsible for changing the destination so the most relevant is actively chosen
+	* @returns Distance to Destination. 
+	*/
+	double MoveOnPath();
 
 public:	
 	// Called every frame
