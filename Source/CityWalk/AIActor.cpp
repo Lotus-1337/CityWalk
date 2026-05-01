@@ -5,11 +5,14 @@
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
+
 #include "AIMovementComponent.h"
+#include "AIBehaviourComponent.h"
 
 #include "CityAIController.h"
 #include "PathFindingSubsystem.h"
 #include "Timers.h"
+#include "AIActivity.h"
 
 DEFINE_LOG_CATEGORY(LogBenchmark);
 
@@ -33,6 +36,8 @@ AAIActor::AAIActor()
 
 	MovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("Movement Component"));
 
+	BehaviourComponent = CreateDefaultSubobject<UAIBehaviourComponent>(TEXT("Behaviour Component"));
+
 }
 
 static int32 BenchmarkIndex = 1;
@@ -42,30 +47,22 @@ void AAIActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UPathFindingSubsystem* PFSubsystem = GetWorld()->GetSubsystem<UPathFindingSubsystem>();
+	int32 Idx = Activities.Add(MakeUnique<FWanderingActivity>());
+	Activities[Idx]->Index = Idx;
 
-	if (!PFSubsystem)
+	BehaviourComponent->ActivityIndex = Idx;
+
+	// GetActivity Ensures Activity is being executed on the actual activity in the Activities Array.
+	FAIActivity* pActivity = BehaviourComponent->GetActivity();
+
+	if (!pActivity)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Pathfinding Subsystem is nullptr. AAIActor::BeginPlay "));
+		UE_LOG(LogTemp, Error, TEXT("Activity is nullptr. "));
 		return;
 	}
 
-	FVector2D Min = PFSubsystem->MeshMin;
-	FVector2D Max = PFSubsystem->MeshMax;
+	pActivity->OnActivityStarted(*this);
 
-	FVector GoalLocation = GetRandomVector(Min.X, Max.X, Min.Y, Max.Y, 90.0f);
-	
-
-	BenchmarkIndex = 1;
-
-
-	//ScheduleBenchmark();
-
-	//DestinationArray.Reserve(64);
-
-	FPathRequest Request = FPathRequest(this, GoalLocation);
-
-	PFSubsystem->RequestPathFinding(Request);
 }
 
 // Called every frame
@@ -73,7 +70,7 @@ void AAIActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (State == EAIState::Idle)
+	if (BehaviourComponent->State == EAIState::Idle)
 	{
 		return;
 	}
@@ -88,15 +85,38 @@ void AAIActor::MoveAI()
 
 	FVector ActorLocation = GetActorLocation();
 
-	double Distance = FVector::DistSquared2D(ActorLocation, DestinationsArray.Last());
+
+	// why the F### is the TArray::Last not safe???
+	int32 GoalIndex = DestinationsArray.Num() - 1;
+	FVector Goal = DestinationsArray.IsValidIndex(GoalIndex) ? DestinationsArray[GoalIndex] : FVector::ZeroVector;
+
+	double Distance = FVector::DistSquared2D(ActorLocation, Goal);
 
 	const double MaxDistance = FMath::Square(MovementComponent->GetMovementScalar());
 
 	// Setting the Location to Destination to avoid random movement close to destination. 
 	if (Distance < MaxDistance)
 	{
-		State = EAIState::Idle;
+		BehaviourComponent->State = EAIState::Idle;
 		MovementComponent->MovementVector = FVector::ZeroVector;
+
+		FAIActivity* Activity = BehaviourComponent->GetActivity();
+
+		if (!Activity)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Activity is nullptr. "));
+			return;
+		}
+
+		// Is the current activity is wandering?
+		if (FWanderingActivity::IsActivityThis(*Activity))
+		{
+			Activity->OnActivityEnded(*this);
+			return;
+		}
+
+		Activity->ExecuteActivity(*this);
+
 		return;
 	}
 
@@ -150,7 +170,7 @@ void AAIActor::OnFoundNewPath()
 		return;
 	}
 
-	State = EAIState::Walking;
+	BehaviourComponent->State = EAIState::Walking;
 
 	Destination = DestinationsArray[0];
 
@@ -245,4 +265,41 @@ void AAIActor::RunBenchmark()
 void AAIActor::ScheduleBenchmark()
 {
 	GetWorld()->GetTimerManager().SetTimer(BenchmarkTimerHandle, this, &AAIActor::RunBenchmark, 0.1f, false);
+}
+
+void AAIActor::RequestPathFinding(const FVector& NewGoal)
+{
+	UPathFindingSubsystem* PFSubsystem = GetWorld()->GetSubsystem<UPathFindingSubsystem>();
+
+	if (!PFSubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PF Subsystem is invalid. "));
+		return;
+	}
+
+	FPathRequest Request = FPathRequest(this, NewGoal);
+
+	PFSubsystem->RequestPathFinding(Request);
+
+	UE_LOG(LogTemp, Log, TEXT("Requested PathFinding to Location %s"), *NewGoal.ToString());
+
+}
+
+
+FVector GetRandomVectorInsideMesh(const AActor& WorldContextObject)
+{
+
+	UPathFindingSubsystem* PFSubsystem = WorldContextObject.GetWorld()->GetSubsystem<UPathFindingSubsystem>();
+
+	if (!PFSubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Pathfinding Subsystem is nullptr. AAIActor::BeginPlay "));
+		return FVector::ZeroVector;
+	}
+
+	FVector2D Min = PFSubsystem->MeshMin;
+	FVector2D Max = PFSubsystem->MeshMax;
+
+	return GetRandomVector(Min.X, Max.X, Min.Y, Max.Y, 90.0f);
+
 }

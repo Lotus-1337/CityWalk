@@ -7,6 +7,7 @@
 #include "AIActor.generated.h"
 
 class UAIMovementComponent;
+class UAIBehaviourComponent;
 class USkeletalMeshComponent;
 class UCapsuleComponent;
 
@@ -15,15 +16,6 @@ class UPathFindingSubsystem;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogBenchmark, All, All)
 
-UENUM()
-enum class EAIState
-{
-
-	Idle,
-	Walking,
-	Working
-
-};
 
 UCLASS()
 class CITYWALK_API AAIActor : public APawn
@@ -44,6 +36,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	UAIMovementComponent* MovementComponent;
 
+public:
+
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UAIBehaviourComponent* BehaviourComponent;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
@@ -56,9 +53,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Benchmarks")
 	double BenchmarkDuration = 0.0;
-
-	UPROPERTY(VisibleAnywhere, Category = "AI State")
-	EAIState State = EAIState::Idle;
 
 public:
 	// Sets default values for this pawn's properties
@@ -102,10 +96,13 @@ public:
 
 	void ScheduleBenchmark();
 
+	void RequestPathFinding(const FVector& NewLocation);
+
 	FORCEINLINE USkeletalMeshComponent* GetMeshComponent() const { return MeshComponent; }
 
 };
 
+FVector GetRandomVectorInsideMesh(const AActor& WorldContextObject);
 
 FORCEINLINE FVector GetRandomVector(const double& MinX, const double& MaxX, const double& MinY, const double& MaxY, const double& MinZ, const double& MaxZ)
 {

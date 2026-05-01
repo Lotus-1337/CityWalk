@@ -82,7 +82,7 @@ void UAIMovementComponent::Move()
 
 	NewLocation.X += MovementVector.X * MovementSpeed * fDeltaTime;
 	NewLocation.Y += MovementVector.Y * MovementSpeed * fDeltaTime;
-	NewLocation.Z += ZVelocity * fDeltaTime;
+	//NewLocation.Z += ZVelocity * fDeltaTime;
 
 	FHitResult Hit;
 
@@ -107,8 +107,6 @@ void UAIMovementComponent::Move()
 	const static float ImpactScalar = 5.0f;
 
 	NewLocation += Hit.ImpactNormal * ImpactScalar;
-
-	if (!IsInTheAir) { NewLocation.Z = OwnerLocation.Z + Hit.ImpactNormal.Z; }
 
 	GetOwner()->SetActorLocation(NewLocation, true, &Hit);
 

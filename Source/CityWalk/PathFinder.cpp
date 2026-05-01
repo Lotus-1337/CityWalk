@@ -144,7 +144,6 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 		if (CurrentNode->Ref == EndNode->Ref)
 		{
-			UE_LOG(LogTemp, Log, TEXT("Found Correct Path. "));
 			return ReconstructPath(OutArray, CurrentNode);
 		}
 

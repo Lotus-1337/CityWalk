@@ -48,17 +48,6 @@ void AWalkerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-	AAIActor* AI = GetWorld()->SpawnActor<AAIActor>(AIClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
-
-	if (!AI)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AI is nullptr. "));
-		return;
-	}
-
 	UPathFindingSubsystem* PFSubsystem = GetWorld()->GetSubsystem<UPathFindingSubsystem>();
 
 	if (!PFSubsystem)
@@ -70,15 +59,18 @@ void AWalkerCharacter::BeginPlay()
 	FVector2D Min = PFSubsystem->MeshMin;
 	FVector2D Max = PFSubsystem->MeshMax;
 
-	int32 MaxAgentNum = 100;
+	int32 MaxAgentNum = 1;
 
-	for (int32 i = 1; i < MaxAgentNum; i++)
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	for (int32 i = 0; i < MaxAgentNum; i++)
 	{
 
 		FVector RandomVector = GetRandomVector(Min.X, Max.X, Min.Y, Max.Y, 90.0f, 90.0f);
 		RandomVector.Z = 90.0f;
 
-		AI = GetWorld()->SpawnActor<AAIActor>(AIClass, RandomVector, FRotator::ZeroRotator, Params);
+		AAIActor* AI = GetWorld()->SpawnActor<AAIActor>(AIClass, RandomVector, FRotator::ZeroRotator, Params);
 
 
 	}
