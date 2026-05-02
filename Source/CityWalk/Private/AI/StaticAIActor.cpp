@@ -6,6 +6,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 
+#include "AIVisualSubsystem.h"
+
 // Sets default values
 AStaticAIActor::AStaticAIActor()
 {
@@ -27,5 +29,31 @@ void AStaticAIActor::SetAnimation(UAnimationAsset* Animation)
 {
 
 	MeshComponent->SetAnimation(Animation);
+
+}
+
+
+void AStaticAIActor::BeginPlay()
+{
+
+	Super::BeginPlay();
+
+	UAIVisualSubsystem* VisualSubsystem = GetWorld()->GetSubsystem<UAIVisualSubsystem>();
+
+	if (!VisualSubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AI Visual Subsystem is invalid. AStaticAIActor::BeginPlay. "));
+		return;
+	}
+
+	USkeletalMesh* Mesh = VisualSubsystem->GetMeshByIndex(4);
+
+	if (!Mesh)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Mesh is nullptr. AStaticAIActor::BeginPlay. "));
+		return;
+	}
+
+	MeshComponent->SetSkeletalMesh(Mesh);
 
 }

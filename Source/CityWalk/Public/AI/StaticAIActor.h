@@ -28,6 +28,12 @@ public:
 	// Sets default values for this actor's properties
 	AStaticAIActor();
 
+protected:
+
+	virtual void BeginPlay() override;
+
+public:
+
 	void SetAnimation(UAnimationAsset* Animation);
 
 };

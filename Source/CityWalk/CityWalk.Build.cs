@@ -17,7 +17,6 @@ public class CityWalk : ModuleRules
 		{
 			Path.Combine(ModuleDirectory, "Public"),
 			Path.Combine(ModuleDirectory, "Public/AI"),
-			Path.Combine(ModuleDirectory, "Public/Components"),
 			Path.Combine(ModuleDirectory, "Public/Core"),
 			Path.Combine(ModuleDirectory, "Public/PathFinding"),
 			Path.Combine(ModuleDirectory, "Public/Player")
@@ -27,7 +26,6 @@ public class CityWalk : ModuleRules
         {
             Path.Combine(ModuleDirectory, "Private"),
             Path.Combine(ModuleDirectory, "Private/AI"),
-            Path.Combine(ModuleDirectory, "Private/Components"),
             Path.Combine(ModuleDirectory, "Private/Core"),
             Path.Combine(ModuleDirectory, "Private/PathFinding"),
             Path.Combine(ModuleDirectory, "Private/Player")
