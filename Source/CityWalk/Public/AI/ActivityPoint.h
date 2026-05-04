@@ -7,6 +7,10 @@
 #include "ActivityPoint.generated.h"
 
 class AAIActor;
+class UCapsuleComponent;
+class UStaticMeshComponent;
+
+class FAIActivity;
 
 UCLASS()
 class CITYWALK_API AActivityPoint : public AActor
@@ -14,6 +18,12 @@ class CITYWALK_API AActivityPoint : public AActor
 	GENERATED_BODY()
 
 protected:
+
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UCapsuleComponent* CapsuleComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UStaticMeshComponent* MeshComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	AAIActor* AI = nullptr;
@@ -23,8 +33,7 @@ protected:
 
 public:
 
-	UPROPERTY(EditDefaultsOnly, Category = "Activity")
-	int32 ActivityIndex = 0;
+	TSharedPtr<FAIActivity> Activity;
 
 public:	
 	// Sets default values for this actor's properties

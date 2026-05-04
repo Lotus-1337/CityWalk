@@ -49,20 +49,13 @@ void UAIBehaviourComponent::OnSetNewActivity()
 	}
 
 	AI->RequestPathFinding(ActivityPoint->GetLocation());
-	State = EAIState::Walking;
-
-	ActivityIndex = ActivityPoint->ActivityIndex;
-
-	FAIActivity* Activity = GetActivity();
+	
 	Activity->OnActivityStarted(*AI);
 
 }
 
 void UAIBehaviourComponent::OnActionEnded()
 {
-
-	State = GetNextState(State);
-
 	AAIActor* AI = Cast<AAIActor>(GetOwner());
 
 	if (!AI)
@@ -71,14 +64,14 @@ void UAIBehaviourComponent::OnActionEnded()
 		return;
 	}
 
-	FAIActivity* Activity = GetActivity();
 	Activity->OnActivityEnded(*AI);
 
 
 }
 
-
-FAIActivity* UAIBehaviourComponent::GetActivity() const
+void UAIBehaviourComponent::SetNewActivity(const TSharedPtr<FAIActivity>& NewActivity)
 {
-	return Activities.IsValidIndex(ActivityIndex) ? Activities[ActivityIndex].Get() : nullptr;
+	Activity.Reset();
+	Activity = NewActivity;
+	OnSetNewActivity();
 }

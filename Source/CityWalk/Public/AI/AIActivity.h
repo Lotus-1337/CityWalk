@@ -6,8 +6,6 @@ class AAIActor;
 
 class FAIActivity;
 
-extern TArray<TUniquePtr<FAIActivity>> Activities;
-
 class FAIActivity
 {
 
@@ -20,7 +18,9 @@ public:
 
 	FORCEINLINE FAIActivity() {}
 
+	// If this this field is left at 0.0f, activity is invinite
 	float Duration = 0.0f;
+	
 	uint8 Index = 0;
 	uint8 TypeID;
 
@@ -35,17 +35,36 @@ public:
 
 };
 
+class FIdleActivity : public FAIActivity
+{
+
+#define UE_IDLE_ID 1
+
+public:
+
+	FIdleActivity(float NewDuration) : FAIActivity(NewDuration) { TypeID = UE_IDLE_ID; }
+
+	FIdleActivity() : FAIActivity() { TypeID = UE_IDLE_ID; }
+
+	virtual void OnActivityStarted(AAIActor& AI) override;
+	
+	virtual void OnActivityEnded(AAIActor& AI) override;
+
+	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_IDLE_ID; }
+
+};
+
 class FWanderingActivity : public FAIActivity
 {
 
-#define UE_WANDERING_ID  1
+#define UE_WANDERING_ID  2
 
 public:
 
 
-	FWanderingActivity(float NewDuration) : FAIActivity(NewDuration) { TypeID = 1; }
+	FWanderingActivity(float NewDuration) : FAIActivity(NewDuration) { TypeID = UE_WANDERING_ID; }
 
-	FWanderingActivity() : FAIActivity() { TypeID = 1; }
+	FWanderingActivity() : FAIActivity() { TypeID = UE_WANDERING_ID; }
 
 	virtual void OnActivityStarted(AAIActor& AI) override;
 
@@ -53,5 +72,24 @@ public:
 
 	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_WANDERING_ID; }
 
+
+};
+
+class FTalkingActivity : public FAIActivity
+{
+
+#define UE_TALKING_ID 3
+
+public:
+
+	FTalkingActivity(float NewDuration) : FAIActivity(NewDuration) { TypeID = UE_TALKING_ID; }
+
+	FTalkingActivity() : FAIActivity() { TypeID = UE_TALKING_ID; }
+
+	virtual void OnActivityStarted(AAIActor& AI) override;
+
+	virtual void OnActivityEnded(AAIActor& AI) override;
+
+	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_TALKING_ID; }
 
 };

@@ -14,6 +14,8 @@
 #include "Timers.h"
 #include "AIActivity.h"
 
+#include "AIVisualSubsystem.h"
+
 DEFINE_LOG_CATEGORY(LogBenchmark);
 
 // Sets default values
@@ -47,10 +49,25 @@ void AAIActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	int32 Idx = Activities.Add(MakeUnique<FWanderingActivity>());
-	Activities[Idx]->Index = Idx;
+	UAIVisualSubsystem* VisualSubsystem = GetWorld()->GetSubsystem<UAIVisualSubsystem>();
 
-	BehaviourComponent->ActivityIndex = Idx;
+	if (!VisualSubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AIVisual Subsystem is invalid. AAIActor::BeginPlay"));
+		return;
+	}
+
+	USkeletalMesh* Mesh = VisualSubsystem->GetRandomMesh();
+
+	if (!Mesh)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Mesh is nullptr. AAIActor::BeginPlay"));
+		return;
+	}
+
+	MeshComponent->SetSkeletalMesh(Mesh);
+
+	BehaviourComponent->SetNewActivity(MakeShared<FWanderingActivity>());
 
 	// GetActivity Ensures Activity is being executed on the actual activity in the Activities Array.
 	FAIActivity* pActivity = BehaviourComponent->GetActivity();
@@ -70,7 +87,7 @@ void AAIActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (BehaviourComponent->State == EAIState::Idle)
+	if (BehaviourComponent->IsIdle())
 	{
 		return;
 	}
@@ -97,7 +114,6 @@ void AAIActor::MoveAI()
 	// Setting the Location to Destination to avoid random movement close to destination. 
 	if (Distance < MaxDistance)
 	{
-		BehaviourComponent->State = EAIState::Idle;
 		MovementComponent->MovementVector = FVector::ZeroVector;
 
 		FAIActivity* Activity = BehaviourComponent->GetActivity();
@@ -169,8 +185,6 @@ void AAIActor::OnFoundNewPath()
 	{
 		return;
 	}
-
-	BehaviourComponent->State = EAIState::Walking;
 
 	Destination = DestinationsArray[0];
 

@@ -7,30 +7,6 @@
 #include "AIBehaviourComponent.generated.h"
 
 class AActivityPoint;
-
-UENUM()
-enum class EAIState
-{
-
-	Idle,
-	Walking,
-	Talking,
-	Working
-
-};
-
-FORCEINLINE EAIState GetNextState(const EAIState& State)
-{
-	switch (State)
-	{
-	case EAIState::Idle: return EAIState::Walking;
-	case EAIState::Walking: return EAIState::Talking;
-	case EAIState::Talking: return EAIState::Working;
-	case EAIState::Working: return EAIState::Idle;
-	default: return EAIState::Idle;
-	}
-}
-
 class FAIActivity;
 class AAIActor;
 
@@ -43,14 +19,13 @@ class CITYWALK_API UAIBehaviourComponent : public UActorComponent
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "AI State")
-	EAIState State;
-
 	UPROPERTY(EditDefaultsOnly, Category = "AI Activity")
 	AActivityPoint* ActivityPoint;
 
-	UPROPERTY(VisibleAnywhere, Category = "AI Activity")
-	uint8 ActivityIndex;
+	TSharedPtr<FAIActivity> Activity;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI Activity")
+	bool bIsIdle;
 
 public:	
 	// Sets default values for this component's properties
@@ -68,17 +43,21 @@ public:
 
 	void OnSetNewActivity();
 
-	FORCEINLINE void SetNewActivity()
+	void SetNewActivity(const TSharedPtr<FAIActivity>& NewActivity);
+
+	FORCEINLINE FAIActivity* GetActivity() 
 	{
-		OnSetNewActivity();
+		return Activity.Get();
 	}
 
-	FORCEINLINE void SetState(const EAIState& NewState) { State = NewState;  }
-	FORCEINLINE EAIState GetState() { return State; }
+	FORCEINLINE void SetIdle(const bool& Flag)
+	{
+		bIsIdle = Flag;
+	}
 
-	FORCEINLINE void SetActivityIndex(const uint8& NewIndex) { ActivityIndex = NewIndex;  }
-	FORCEINLINE uint8 GetActivityIndex() { return ActivityIndex;  }
-
-	FAIActivity* GetActivity() const;
+	FORCEINLINE bool IsIdle() const
+	{
+		return bIsIdle;
+	}
 		
 };

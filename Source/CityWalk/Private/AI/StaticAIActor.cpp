@@ -46,7 +46,7 @@ void AStaticAIActor::BeginPlay()
 		return;
 	}
 
-	USkeletalMesh* Mesh = VisualSubsystem->GetMeshByIndex(4);
+	USkeletalMesh* Mesh = VisualSubsystem->GetRandomMesh();
 
 	if (!Mesh)
 	{
