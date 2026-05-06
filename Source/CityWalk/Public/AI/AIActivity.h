@@ -93,3 +93,22 @@ public:
 	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_TALKING_ID; }
 
 };
+
+class FWalkingActivity : public FAIActivity
+{
+
+#define UE_WALKING_ID 4
+
+public:
+
+	FWalkingActivity(float NewDuration) : FAIActivity(NewDuration) { TypeID = UE_WALKING_ID; }
+
+	FWalkingActivity() : FAIActivity() { TypeID = UE_WALKING_ID; }
+
+	virtual void OnActivityStarted(AAIActor& AI) override;
+
+	virtual void OnActivityEnded(AAIActor& AI) override;
+
+	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_WALKING_ID; }
+
+};

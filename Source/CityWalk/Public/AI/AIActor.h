@@ -47,6 +47,9 @@ protected:
 	FVector Destination = FVector::ZeroVector;
 
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	FVector Goal = FVector::ZeroVector;
+
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	int32 DestinationIndex = 0;
 
 	TArray<FVector> DestinationsArray;
@@ -77,6 +80,10 @@ public:
 	// Method that needs to be caled every time a new Path is Found.
 	void OnFoundNewPath();
 
+	void FindActivityPoint();
+
+	void SetActivity();
+
 	/**
 	* Method Benchmarking PathFinding and outputting Time Duration
 	* 
@@ -99,6 +106,8 @@ public:
 	void RequestPathFinding(const FVector& NewLocation);
 
 	FORCEINLINE USkeletalMeshComponent* GetMeshComponent() const { return MeshComponent; }
+
+	FORCEINLINE FVector GetGoal() const { return Goal; }
 
 };
 

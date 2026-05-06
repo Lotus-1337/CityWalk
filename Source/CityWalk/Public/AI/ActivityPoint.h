@@ -25,11 +25,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	UStaticMeshComponent* MeshComponent;
 
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	AAIActor* AI = nullptr;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Location")
 	FVector Location = FVector::ZeroVector;
+
+public:
+
+	UPROPERTY(EditDefaultsOnly, Category = "Activity Point")
+	int32 MaxAIAtPoint = 2;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Activity Point")
+	int32 AIAtPoint = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Activity Point")
+	bool IsAvailable = true;
 
 public:
 
@@ -50,4 +58,15 @@ public:
 		return Location;
 	}
 
+	FORCEINLINE void AddAIAtPoint()
+	{
+		AIAtPoint++;
+		if (AIAtPoint >= MaxAIAtPoint) { IsAvailable = false; }
+	}
+
+	FORCEINLINE void RemoveAIAtPoint()
+	{
+		AIAtPoint--;
+		if (AIAtPoint < MaxAIAtPoint) { IsAvailable = true; }
+	}
 };

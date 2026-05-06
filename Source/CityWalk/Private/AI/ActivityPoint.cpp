@@ -6,6 +6,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 
+#include "ActivityPointsSubsystem.h"
+
 // Sets default values
 AActivityPoint::AActivityPoint()
 {
@@ -26,6 +28,18 @@ AActivityPoint::AActivityPoint()
 void AActivityPoint::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Location = GetActorLocation();
+
+	UActivityPointsSubsystem* POISubsystem = GetWorld()->GetSubsystem<UActivityPointsSubsystem>();
 	
+	if (!POISubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Activity Points Subsystem is invalid. AActivityPoint::BeginPlay"))
+		return;
+	}
+
+	POISubsystem->AddActivityPoint(this);
+
 }
 

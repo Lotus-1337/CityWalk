@@ -42,13 +42,10 @@ void UAIBehaviourComponent::OnSetNewActivity()
 		return;
 	}
 
-	if (!ActivityPoint)
+	if (!Activity.IsValid())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Activity Point is invalid. "));
 		return;
 	}
-
-	AI->RequestPathFinding(ActivityPoint->GetLocation());
 	
 	Activity->OnActivityStarted(*AI);
 

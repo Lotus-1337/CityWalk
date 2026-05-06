@@ -12,9 +12,12 @@
 #include "CityAIController.h"
 #include "PathFindingSubsystem.h"
 #include "Timers.h"
+
 #include "AIActivity.h"
+#include "ActivityPoint.h"
 
 #include "AIVisualSubsystem.h"
+#include "ActivityPointsSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogBenchmark);
 
@@ -67,18 +70,7 @@ void AAIActor::BeginPlay()
 
 	MeshComponent->SetSkeletalMesh(Mesh);
 
-	BehaviourComponent->SetNewActivity(MakeShared<FWanderingActivity>());
-
-	// GetActivity Ensures Activity is being executed on the actual activity in the Activities Array.
-	FAIActivity* pActivity = BehaviourComponent->GetActivity();
-
-	if (!pActivity)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Activity is nullptr. "));
-		return;
-	}
-
-	pActivity->OnActivityStarted(*this);
+	FindActivityPoint();
 
 }
 
@@ -102,11 +94,6 @@ void AAIActor::MoveAI()
 
 	FVector ActorLocation = GetActorLocation();
 
-
-	// why the F### is the TArray::Last not safe???
-	int32 GoalIndex = DestinationsArray.Num() - 1;
-	FVector Goal = DestinationsArray.IsValidIndex(GoalIndex) ? DestinationsArray[GoalIndex] : FVector::ZeroVector;
-
 	double Distance = FVector::DistSquared2D(ActorLocation, Goal);
 
 	const double MaxDistance = FMath::Square(MovementComponent->GetMovementScalar());
@@ -120,20 +107,19 @@ void AAIActor::MoveAI()
 
 		if (!Activity)
 		{
+			BehaviourComponent->SetNewActivity(MakeShared<FIdleActivity>());
 			UE_LOG(LogTemp, Error, TEXT("Activity is nullptr. "));
 			return;
 		}
 
 		// Is the current activity is wandering?
-		if (FWanderingActivity::IsActivityThis(*Activity))
+		if (!FWanderingActivity::IsActivityThis(*Activity))
 		{
-			Activity->OnActivityEnded(*this);
+			Activity->ExecuteActivity(*this);
 			return;
 		}
 
-		Activity->ExecuteActivity(*this);
-
-		return;
+		Activity->OnActivityEnded(*this);
 	}
 
 	FVector MovementVector = Destination - ActorLocation;
@@ -149,6 +135,55 @@ void AAIActor::MoveAI()
 	MovementComponent->Rotate(NewRotation);
 
 }
+
+void AAIActor::SetActivity()
+{
+
+	// Setting the default Activity
+	BehaviourComponent->SetNewActivity(MakeShared<FWanderingActivity>());
+
+	// GetActivity Ensures Activity is being executed on the actual activity in the Activities Array.
+	FAIActivity* pActivity = BehaviourComponent->GetActivity();
+
+	if (!pActivity)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Activity is nullptr. "));
+		return;
+	}
+
+	pActivity->OnActivityStarted(*this);
+
+}
+
+void AAIActor::FindActivityPoint()
+{
+
+	UActivityPointsSubsystem* POISubsystem = GetWorld()->GetSubsystem<UActivityPointsSubsystem>();
+
+	if (!POISubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Activity Points Subsystem is invalid. AAIActor::FindActivityPoint. "));
+		return;
+	}
+
+	AActivityPoint* ActivityPoint = POISubsystem->GetAvailablePoint();
+
+	if (!ActivityPoint)
+	{
+		SetActivity();
+		return;
+	}
+
+	ActivityPoint->AddAIAtPoint();
+
+	Goal = ActivityPoint->GetLocation();
+
+	BehaviourComponent->SetNewActivity(MakeShared<FWalkingActivity>());
+
+	
+
+}
+
 
 double AAIActor::MoveOnPath()
 {
@@ -240,12 +275,12 @@ void AAIActor::RunBenchmark()
 	FVector2D MeshMin = PFSubsystem->MeshMin;
 	FVector2D MeshMax = PFSubsystem->MeshMax;
 
-	FVector Start = GetRandomVector(MeshMin.X, MeshMax.X, MeshMin.Y, MeshMax.Y, 50.0);
-	FVector Goal =  GetRandomVector(MeshMin.X, MeshMax.X, MeshMin.Y, MeshMax.Y, 50.0);
+	FVector BenchmarkStart = GetRandomVector(MeshMin.X, MeshMax.X, MeshMin.Y, MeshMax.Y, 50.0);
+	FVector BenchmarkGoal =  GetRandomVector(MeshMin.X, MeshMax.X, MeshMin.Y, MeshMax.Y, 50.0);
 
-	UE_LOG(LogTemp, Log, TEXT("Start: %s. Goal: %s"), *Start.ToString(), *Goal.ToString());
+	UE_LOG(LogTemp, Log, TEXT("Start: %s. Goal: %s"), *BenchmarkStart.ToString(), *BenchmarkGoal.ToString());
 	
-	BenchmarkPathFinding(Start, Goal, false, PFSubsystem);
+	BenchmarkPathFinding(BenchmarkStart, BenchmarkGoal, false, PFSubsystem);
 
 	const int32 MaxBenchmarks = 100;
 
@@ -290,6 +325,8 @@ void AAIActor::RequestPathFinding(const FVector& NewGoal)
 		UE_LOG(LogTemp, Error, TEXT("PF Subsystem is invalid. "));
 		return;
 	}
+
+	Goal = NewGoal;
 
 	FPathRequest Request = FPathRequest(this, NewGoal);
 

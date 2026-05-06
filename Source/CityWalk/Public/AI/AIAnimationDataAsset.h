@@ -25,7 +25,7 @@ public:
 
 	FORCEINLINE UAnimationAsset* GetRandomAnimation()
 	{
-		int32 Index = FMath::RandRange(0, AnimationsArray.Num());
+		int32 Index = FMath::RandRange(0, AnimationsArray.Num() - 1);
 		return GetAnimationByIndex(Index);
 	}
 

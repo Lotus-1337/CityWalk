@@ -25,7 +25,7 @@ public:
 
 	FORCEINLINE USkeletalMesh* GetRandomMesh()
 	{
-		int32 Index = FMath::RandRange(0, MeshesArray.Num());
+		int32 Index = FMath::RandRange(0, MeshesArray.Num() - 1);
 		return GetMeshByIndex(Index);
 	}
 

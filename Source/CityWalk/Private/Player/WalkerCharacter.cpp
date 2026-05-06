@@ -59,7 +59,7 @@ void AWalkerCharacter::BeginPlay()
 	FVector2D Min = PFSubsystem->MeshMin;
 	FVector2D Max = PFSubsystem->MeshMax;
 
-	int32 MaxAgentNum = 1;
+	int32 MaxAgentNum = 16;
 
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;

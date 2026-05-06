@@ -79,7 +79,7 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 		GetEmptyArray();
 	}
 
-	FVector DefaultExtent = FVector(100.0f, 100.0f, 200.0f);
+	FVector DefaultExtent = FVector(200.0f, 200.0f, 200.0f);
 
 	dtPolyRef StartRef = 0;
 	dtPolyRef EndRef = 0;

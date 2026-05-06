@@ -22,8 +22,6 @@ void FIdleActivity::OnActivityEnded(AAIActor& AI)
 void FWanderingActivity::OnActivityStarted(AAIActor& AI)
 {
 
-	UE_LOG(LogTemp, Log, TEXT("FWanderingActivity::OnActivityStarted "));
-
 	FVector Goal = GetRandomVectorInsideMesh(AI);
 
 	AI.RequestPathFinding(Goal);
@@ -63,5 +61,17 @@ void FTalkingActivity::OnActivityEnded(AAIActor& AI)
 {
 
 
+
+}
+
+void FWalkingActivity::OnActivityStarted(AAIActor& AI)
+{
+
+	AI.RequestPathFinding(AI.GetGoal());
+
+}
+
+void FWalkingActivity::OnActivityEnded(AAIActor& AI)
+{
 
 }
