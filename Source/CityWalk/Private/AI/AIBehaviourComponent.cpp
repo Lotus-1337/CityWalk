@@ -72,3 +72,16 @@ void UAIBehaviourComponent::SetNewActivity(const TSharedPtr<FAIActivity>& NewAct
 	Activity = NewActivity;
 	OnSetNewActivity();
 }
+
+
+FAIActivity* UAIBehaviourComponent::GetActivity() const
+{
+
+	if (ActivityPoint)
+	{
+		return ActivityPoint->Activity.Get();
+	}
+
+	return Activity.Get();
+
+}

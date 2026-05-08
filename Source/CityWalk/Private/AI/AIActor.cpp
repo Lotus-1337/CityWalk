@@ -112,8 +112,7 @@ void AAIActor::MoveAI()
 			return;
 		}
 
-		// Is the current activity is wandering?
-		if (!FWanderingActivity::IsActivityThis(*Activity))
+		if (FTalkingActivity::IsActivityThis(*Activity) || FWorkingActivity::IsActivityThis(*Activity))
 		{
 			Activity->ExecuteActivity(*this);
 			return;

@@ -45,10 +45,7 @@ public:
 
 	void SetNewActivity(const TSharedPtr<FAIActivity>& NewActivity);
 
-	FORCEINLINE FAIActivity* GetActivity() 
-	{
-		return Activity.Get();
-	}
+	FAIActivity* GetActivity() const;
 
 	FORCEINLINE void SetIdle(const bool& Flag)
 	{
