@@ -6,18 +6,19 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 
-#include "AIMovementComponent.h"
-#include "AIBehaviourComponent.h"
+#include "AI/AIMovementComponent.h"
+#include "AI/AIBehaviourComponent.h"
+#include "AI/AILODComponent.h"
 
-#include "CityAIController.h"
-#include "PathFindingSubsystem.h"
-#include "Timers.h"
+#include "AI/CityAIController.h"
+#include "PathFinding/PathFindingSubsystem.h"
+#include "Core/Timers.h"
 
-#include "AIActivity.h"
-#include "ActivityPoint.h"
+#include "AI/AIActivity.h"
+#include "AI/ActivityPoint.h"
 
-#include "AIVisualSubsystem.h"
-#include "ActivityPointsSubsystem.h"
+#include "AI/AIVisualSubsystem.h"
+#include "AI/ActivityPointsSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogBenchmark);
 
@@ -42,6 +43,8 @@ AAIActor::AAIActor()
 	MovementComponent = CreateDefaultSubobject<UAIMovementComponent>(TEXT("Movement Component"));
 
 	BehaviourComponent = CreateDefaultSubobject<UAIBehaviourComponent>(TEXT("Behaviour Component"));
+
+	LODComponent = CreateDefaultSubobject<UAILODComponent>(TEXT("LOD Component"));
 
 }
 
@@ -79,12 +82,23 @@ void AAIActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (BehaviourComponent->IsIdle())
+	if (!LODComponent->ShouldTickBeExecuted(DeltaTime))
 	{
 		return;
 	}
 
+	if (BehaviourComponent->IsIdle())
+	{
+		LODComponent->SetLOD(EAILODState::NoDetail);
+		SetActorTickEnabled(false);
+		return;
+	}
+
 	MoveAI();
+
+	MovementComponent->fDeltaTime = DeltaTime;
+	MovementComponent->Move();
+
 }
 
 void AAIActor::MoveAI()
@@ -137,6 +151,8 @@ void AAIActor::MoveAI()
 
 void AAIActor::SetActivity()
 {
+
+	SetActorTickEnabled(true);
 
 	// Setting the default Activity
 	BehaviourComponent->SetNewActivity(MakeShared<FWanderingActivity>());

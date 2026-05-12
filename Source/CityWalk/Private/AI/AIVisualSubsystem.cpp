@@ -9,15 +9,11 @@
 UAIVisualSubsystem::UAIVisualSubsystem()
 {
 
-	//FString Path = FPaths::ProjectContentDir() / TEXT("DataAssets/");
 	FString Path = TEXT("/Game/DataAssets/");
 
 	FString MeshPath = Path / TEXT("DA_MeshDataAsset.DA_MeshDataAsset");
 
 	static ConstructorHelpers::FObjectFinder<UAIMeshDataAsset> MeshAsset(*MeshPath);
-
-	// Try this path:
-	// /Game/DataAssets/DA_MeshDataAsset.DA_MeshDataAsset
 
 	if (!MeshAsset.Succeeded())
 	{

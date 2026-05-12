@@ -8,14 +8,15 @@
 
 class UAIMovementComponent;
 class UAIBehaviourComponent;
+class UAILODComponent;
 class USkeletalMeshComponent;
 class UCapsuleComponent;
+
 
 class ACityAIController;
 class UPathFindingSubsystem;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogBenchmark, All, All)
-
 
 UCLASS()
 class CITYWALK_API AAIActor : public APawn
@@ -35,6 +36,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	UAIMovementComponent* MovementComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UAILODComponent* LODComponent;
 
 public:
 

@@ -8,8 +8,9 @@
 
 #include "Camera/CameraComponent.h"
 
-#include "AIActor.h"
-#include "PathFindingSubsystem.h"
+#include "AI/AIActor.h"
+#include "AI/CityAISubsystem.h"
+#include "PathFinding/PathFindingSubsystem.h"
 
 static double TotalDeltaTime = 0.0;
 static double HowManyTicks = 0.0;
@@ -48,38 +49,23 @@ void AWalkerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UPathFindingSubsystem* PFSubsystem = GetWorld()->GetSubsystem<UPathFindingSubsystem>();
-
-	if (!PFSubsystem)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Pathfinding Subsystem is nullptr. AAIActor::BeginPlay "));
-		return;
-	}
-
-	FVector2D Min = PFSubsystem->MeshMin;
-	FVector2D Max = PFSubsystem->MeshMax;
-
-	int32 MaxAgentNum = 16;
-
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-	for (int32 i = 0; i < MaxAgentNum; i++)
-	{
-
-		FVector RandomVector = GetRandomVector(Min.X, Max.X, Min.Y, Max.Y, 90.0f, 90.0f);
-		RandomVector.Z = 90.0f;
-
-		AAIActor* AI = GetWorld()->SpawnActor<AAIActor>(AIClass, RandomVector, FRotator::ZeroRotator, Params);
-
-
-	}
-
 	TotalDeltaTime = 0.0;
 	HowManyTicks = 0.0;
 
 	MaxFPS = 0.0;
 	MinFPS = 1e10;
+
+	UCityAISubsystem* AISubsystem = GetWorld()->GetSubsystem<UCityAISubsystem>();
+
+	if (!AISubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AI Subsystem is invalid. "));
+		return;
+	}
+
+	AISubsystem->SetPlayer(this);
+
+	AISubsystem->SpawnAI();
 
 }
 
