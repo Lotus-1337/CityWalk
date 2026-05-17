@@ -96,8 +96,10 @@ void AAIActor::Tick(float DeltaTime)
 
 	MoveAI();
 
-	MovementComponent->fDeltaTime = DeltaTime;
+	MovementComponent->fDeltaTime = LODComponent->TicksTime;
 	MovementComponent->Move();
+
+	LODComponent->TicksTime = 0.0f;
 
 }
 

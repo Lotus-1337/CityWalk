@@ -6,3 +6,15 @@
 
 I Also Tried to benchmark the same scene with 64 AI's which resulted in 49 FPS average.
 Benchmarks Stats outside of UE Editor: AVG FPS 58 MAX 114 MIN 3
+
+# 128 Living AI's Performance:
+
+## Performance Stats with no further GPU Optimisations or etc.
+
+Performance with Full LOD for all AI Agents: AVG FPS 46.9, MAX 98, MIN 4 FPS.
+
+LOD System is yet to be implemented
+
+## Performance stats with Mesh LOD Optimisations
+
+Performance with Full LOD for all AI Agents: AVG FPS 57.6, MAX 96.7, MIN 5 FPS.

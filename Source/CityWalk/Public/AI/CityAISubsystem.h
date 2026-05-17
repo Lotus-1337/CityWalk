@@ -44,4 +44,7 @@ public:
 		Player = NewPlayer;
 	}
 
+	/** @returns Player Location or Zero Vector if Player is nullptr. */
+	FVector GetPlayerLocation();
+
 };

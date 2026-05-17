@@ -21,7 +21,9 @@ void UAILODComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	LODState = EAILODState::Full;
+
+	ProcessLOD();
 	
 }
 
@@ -64,12 +66,11 @@ bool UAILODComponent::ShouldTickBeExecuted(float DeltaTime)
 bool UAILODComponent::IncrementTicks()
 {
 
-	TickID++;
-	if (TickID > MaxTickID)
+	if (++TickID >= MaxTickID)
 	{
 		TickID = 0;
-		TicksTime = 0;
+		return true;
 	}
 
-	return TickID == 0;
+	return false;
 }

@@ -37,13 +37,13 @@ protected:
 
 public:
 
-	UPROPERTY(EditDefaultsOnly, Category = "Tick")
+	UPROPERTY(VisibleAnywhere, Category = "Tick")
 	int8 TickID = 0;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Tick")
+	UPROPERTY(VisibleAnywhere, Category = "Tick")
 	int8 MaxTickID = 0;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Tick")
+	UPROPERTY(VisibleAnywhere, Category = "Tick")
 	float TicksTime = 0;
 
 public:	

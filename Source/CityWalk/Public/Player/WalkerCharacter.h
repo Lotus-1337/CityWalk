@@ -4,12 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
+#include "Core/FPSCounter.h"
+
 #include "WalkerCharacter.generated.h"
 
 class UCameraComponent;
 class UInputAction;
 
 class AAIActor;
+
+struct FFPSCounter;
 
 UCLASS()
 class CITYWALK_API AWalkerCharacter : public ACharacter
@@ -39,6 +44,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TSubclassOf<AAIActor> AIClass;
 
+	FFPSCounter FPSCounter;
+
+	FTimerHandle FPSTimerHandle;
+
 public:
 	// Sets default values for this character's properties
 	AWalkerCharacter();
@@ -63,6 +72,8 @@ protected:
 	void MouseLook(FVector2D LookAxis);
 
 public:
+
+	void ResetFPS();
 
 	UFUNCTION()
 	void DoMove(const FInputActionValue& Value);

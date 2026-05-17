@@ -36,12 +36,12 @@ void UCityAISubsystem::SpawnAI()
 {
 
 	const int32 MaxAI = 32;
-	const int32 MaxSpawnedAIPerFrame = 16;
+	const int32 MaxSpawnedAIPerFrame = 8;
 
 	const int32 MaxAIThisFrame = FMath::Clamp(MaxAI - AIArray.Num(), 0, MaxSpawnedAIPerFrame);
 
-	const FVector MaxAIPositionRange = FVector(1000.0f, 1000.0f, 0.0f);
-	const FVector PlayerLocation = Player->GetActorLocation();
+	const FVector MaxAIPositionRange = FVector(4000.0f, 4000.0f, 0.0f);
+	const FVector PlayerLocation = GetPlayerLocation();
 
 	FVector Min = PlayerLocation - MaxAIPositionRange;
 	FVector Max = PlayerLocation + MaxAIPositionRange;
@@ -60,4 +60,11 @@ void UCityAISubsystem::SpawnAI()
 
 	}
 
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UCityAISubsystem::SpawnAI);
+
+}
+
+FVector UCityAISubsystem::GetPlayerLocation()
+{
+	return Player != nullptr ? Player->GetActorLocation() : FVector::ZeroVector;
 }

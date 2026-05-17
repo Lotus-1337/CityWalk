@@ -12,12 +12,6 @@
 #include "AI/CityAISubsystem.h"
 #include "PathFinding/PathFindingSubsystem.h"
 
-static double TotalDeltaTime = 0.0;
-static double HowManyTicks = 0.0;
-
-static double MaxFPS = 0.0;
-static double MinFPS = 1e10;
-
 // Sets default values
 AWalkerCharacter::AWalkerCharacter()
 {
@@ -49,12 +43,6 @@ void AWalkerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TotalDeltaTime = 0.0;
-	HowManyTicks = 0.0;
-
-	MaxFPS = 0.0;
-	MinFPS = 1e10;
-
 	UCityAISubsystem* AISubsystem = GetWorld()->GetSubsystem<UCityAISubsystem>();
 
 	if (!AISubsystem)
@@ -67,6 +55,9 @@ void AWalkerCharacter::BeginPlay()
 
 	AISubsystem->SpawnAI();
 
+	// Resetting FPS Counter after a half a second for more accurate FPS Averages ( First few frames are very slow, as a lot of stuff is being loaded )
+	GetWorld()->GetTimerManager().SetTimer(FPSTimerHandle, this, &AWalkerCharacter::ResetFPS, 0.5f, false);
+
 }
 
 // Called every frame
@@ -74,16 +65,7 @@ void AWalkerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	HowManyTicks += 1;
-	TotalDeltaTime += DeltaTime;
-
-	double FPS = 1 / DeltaTime;
-	double AverageFPS = HowManyTicks / TotalDeltaTime;
-
-	MaxFPS = FMath::Max(FPS, MaxFPS);
-	MinFPS = FMath::Min(FPS, MinFPS);
-
-	UE_LOG(LogTemp, Log, TEXT("FPS: %f. Average FPS: %f. Min FPS: %f. Max FPS: %f"), FPS, AverageFPS, MinFPS, MaxFPS);
+	FPSCounter.CalculateFPS(DeltaTime);
 
 }
 
@@ -173,4 +155,9 @@ void AWalkerCharacter::JumpStart()
 void AWalkerCharacter::JumpEnd()
 {
 	StopJumping();
+}
+
+void AWalkerCharacter::ResetFPS()
+{
+	FPSCounter.ResetCounter();
 }
