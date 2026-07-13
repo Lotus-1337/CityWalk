@@ -6,6 +6,8 @@
 #include "AI/AIActor.h"
 #include "Player/WalkerCharacter.h"
 
+#include "AILODManager.h"
+
 // Sets default values
 UCityAISubsystem::UCityAISubsystem()
 {
@@ -30,12 +32,18 @@ void UCityAISubsystem::OnWorldBeginPlay(UWorld& World)
 
 	Super::OnWorldBeginPlay(World);
 
+	LODManager = MakeUnique<FAILODManager>();
+
+
+	//GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UCityAISubsystem::ManageAILOD);
+
+	AIArray.Reserve(MaxAI);
+
 }
 
 void UCityAISubsystem::SpawnAI()
 {
 
-	const int32 MaxAI = 32;
 	const int32 MaxSpawnedAIPerFrame = 8;
 
 	const int32 MaxAIThisFrame = FMath::Clamp(MaxAI - AIArray.Num(), 0, MaxSpawnedAIPerFrame);
@@ -67,4 +75,20 @@ void UCityAISubsystem::SpawnAI()
 FVector UCityAISubsystem::GetPlayerLocation()
 {
 	return Player != nullptr ? Player->GetActorLocation() : FVector::ZeroVector;
+}
+
+void UCityAISubsystem::ManageAILOD()
+{
+
+	if (!LODManager.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("LOD Manager is nullptr. UCityAISubsystem::ManageAILOD"));
+		return;
+	}
+
+
+	LODManager->ManageAILOD(AIArray, GetPlayerLocation(), 16);
+
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UCityAISubsystem::ManageAILOD);
+
 }

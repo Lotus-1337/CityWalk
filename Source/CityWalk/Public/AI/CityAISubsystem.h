@@ -4,10 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+
+#include "AI/AILODManager.h"
+
 #include "CityAISubsystem.generated.h"
 
 class AAIActor;
 class AWalkerCharacter;
+
 
 UCLASS()
 class CITYWALK_API UCityAISubsystem : public UWorldSubsystem
@@ -19,11 +23,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TArray<AAIActor*> AIArray;
 
-	UPROPERTY(EditDefaultsOnly, Category = AI)
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TSubclassOf<AAIActor> AIClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	AWalkerCharacter* Player;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	int32 MaxAI = 128;
+
+	TUniquePtr<FAILODManager> LODManager;
 
 public:	
 	// Sets default values for this actor's properties
@@ -36,8 +45,9 @@ protected:
 
 public:	
 
-
 	void SpawnAI();
+
+	void ManageAILOD();
 
 	FORCEINLINE void SetPlayer(AWalkerCharacter* NewPlayer)
 	{

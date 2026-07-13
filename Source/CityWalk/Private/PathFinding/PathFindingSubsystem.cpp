@@ -88,7 +88,7 @@ bool UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVecto
 
 	if (PolyArr.IsEmpty())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PathFinding didn't return anything. "));
+		UE_LOG(LogTemp, Warning, TEXT("PathFinding from %s to %s didn't return anything. "), *StartLocation.ToString(), *GoalLocation.ToString());
 		return false;
 	}
 

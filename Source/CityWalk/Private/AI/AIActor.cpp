@@ -75,6 +75,7 @@ void AAIActor::BeginPlay()
 
 	FindActivityPoint();
 
+
 }
 
 // Called every frame

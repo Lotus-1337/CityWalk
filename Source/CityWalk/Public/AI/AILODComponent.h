@@ -12,9 +12,9 @@ enum class EAILODState
 {
 
 #define MAX_FULL_TICKS 0i8
-#define MAX_MED_TICKS 2i8
-#define MAX_LOW_TICKS 8i8
-#define MAX_NO_DETAIL_TICKS 16i8
+#define MAX_MED_TICKS 4i8
+#define MAX_LOW_TICKS 16i8
+#define MAX_NO_DETAIL_TICKS 30i8
 #define MAX_DIE_TICKS INT8_MAX
 
 	Full,

@@ -16,6 +16,8 @@ class UCapsuleComponent;
 class ACityAIController;
 class UPathFindingSubsystem;
 
+class FAILODManager;
+
 DECLARE_LOG_CATEGORY_EXTERN(LogBenchmark, All, All)
 
 UCLASS()
@@ -25,6 +27,7 @@ class CITYWALK_API AAIActor : public APawn
 
 	friend class ACityAIController;
 	friend class UPathFindingSubsystem;
+	friend class FAILODManager;
 
 protected:
 

@@ -3,7 +3,19 @@
 void FFPSCounter::CalculateFPS(const float& DeltaTime)
 {
 
-	HowManyTicks += 1;
+	if (DeltaTime == 0.0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Delta Time is 0. Cannot divide by 0. "));
+		return;
+	}
+
+	// looking at just the last 100 frames.
+	if (++HowManyTicks >= 100)
+	{
+		HowManyTicks = 1;
+		TotalDeltaTime = 0.0;
+	}
+
 	TotalDeltaTime += DeltaTime;
 
 	double FPS = 1 / DeltaTime;
