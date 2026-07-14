@@ -81,6 +81,7 @@ void AAIActor::BeginPlay()
 // Called every frame
 void AAIActor::Tick(float DeltaTime)
 {
+
 	Super::Tick(DeltaTime);
 
 	if (!LODComponent->ShouldTickBeExecuted(DeltaTime))
@@ -113,7 +114,7 @@ void AAIActor::MoveAI()
 
 	double Distance = FVector::DistSquared2D(ActorLocation, Goal);
 
-	const double MaxDistance = FMath::Square(MovementComponent->GetMovementScalar());
+	constexpr double MaxDistance = FMath::Square(100);
 
 	// Setting the Location to Destination to avoid random movement close to destination. 
 	if (Distance < MaxDistance)
@@ -209,15 +210,14 @@ double AAIActor::MoveOnPath()
 	{
 		return -10;
 	}
-	
-	float MaxDistance = 50.0f;
 
 	if (!DestinationsArray.IsValidIndex(DestinationIndex + 1)) // MicroOptimsation, no unnecessary Dist2D checking.
 	{
 		return -10;
 	}
 
-	double Distance = FVector::Dist2D(GetActorLocation(), Destination);
+	double Distance = FVector::DistSquared2D(GetActorLocation(), Destination);
+	constexpr float MaxDistance = FMath::Square(50.0f);
 
 	if (Distance < MaxDistance)
 	{

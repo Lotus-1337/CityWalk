@@ -35,7 +35,7 @@ void UCityAISubsystem::OnWorldBeginPlay(UWorld& World)
 	LODManager = MakeUnique<FAILODManager>();
 
 
-	//GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UCityAISubsystem::ManageAILOD);
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UCityAISubsystem::ManageAILOD);
 
 	AIArray.Reserve(MaxAI);
 
