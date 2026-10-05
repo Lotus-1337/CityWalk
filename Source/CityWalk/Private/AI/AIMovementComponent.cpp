@@ -65,6 +65,9 @@ void UAIMovementComponent::AddMovementInput(const FVector& NewMovementVector)
 void UAIMovementComponent::Move()
 {
 
+
+	TRACE_CPUPROFILER_EVENT_SCOPE(UAIMovementComponent::Move);
+
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
 	FVector NewLocation = OwnerLocation;
 

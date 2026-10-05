@@ -19,6 +19,11 @@ void FIdleActivity::OnActivityEnded(AAIActor& AI)
 
 }
 
+void FIdleActivity::ExecuteActivity(AAIActor& AI)
+{
+	OnActivityEnded(AI);
+}
+
 void FWanderingActivity::OnActivityStarted(AAIActor& AI)
 {
 
@@ -31,8 +36,13 @@ void FWanderingActivity::OnActivityStarted(AAIActor& AI)
 void FWanderingActivity::OnActivityEnded(AAIActor& AI)
 {
 
-	OnActivityStarted(AI);
+	AI.BehaviourComponent->SetIdle(true);
 
+}
+
+void FWanderingActivity::ExecuteActivity(AAIActor& AI)
+{
+	OnActivityStarted(AI);
 }
 
 void FTalkingActivity::OnActivityStarted(AAIActor& AI)
@@ -60,9 +70,16 @@ void FTalkingActivity::OnActivityStarted(AAIActor& AI)
 void FTalkingActivity::OnActivityEnded(AAIActor& AI)
 {
 
-
+	AI.BehaviourComponent->SetIdle(true);
 
 }
+
+
+void FTalkingActivity::ExecuteActivity(AAIActor& AI)
+{
+	OnActivityStarted(AI);
+}
+
 
 void FWalkingActivity::OnActivityStarted(AAIActor& AI)
 {
@@ -74,4 +91,9 @@ void FWalkingActivity::OnActivityStarted(AAIActor& AI)
 void FWalkingActivity::OnActivityEnded(AAIActor& AI)
 {
 
+}
+
+void FWalkingActivity::ExecuteActivity(AAIActor& AI)
+{
+	OnActivityStarted(AI);
 }

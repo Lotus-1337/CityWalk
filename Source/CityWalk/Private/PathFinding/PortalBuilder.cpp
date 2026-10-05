@@ -58,8 +58,11 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 		int32 VertIndex0 = PolyInfo->MainHandle.Poly->verts[i];
 		int32 VertIndex1 = PolyInfo->MainHandle.Poly->verts[(i + 1) % PolyInfo->MainHandle.Poly->vertCount];
 
-		FVector V0 = InvRealToVector(&PolyInfo->Tile->verts[VertIndex0 * 3]); // Inverted Conversions are useful here too
-		FVector V1 = InvRealToVector(&PolyInfo->Tile->verts[VertIndex1 * 3]);
+		dtTileVert* TV0 = &PolyInfo->Tile->verts[VertIndex0 * 3];
+		dtTileVert* TV1 = &PolyInfo->Tile->verts[VertIndex1 * 3];
+
+		FVector V0 = InvTileVertToVector(PolyInfo->Tile, TV0); // Inverted Conversions are useful here too
+		FVector V1 = InvTileVertToVector(PolyInfo->Tile, TV1);
 
 		return FPortal(V1, V0);
 

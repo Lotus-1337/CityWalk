@@ -27,7 +27,7 @@ APathFinder::APathFinder()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-	PolySet = TSparseSet<dtPolyRef, Index_t, FPolyNode>(1024);
+	PolySet = FCityWalkContainers::TSparseSet<dtPolyRef, Index_t, FPolyNode>(1024);
 
 
 }
@@ -458,11 +458,11 @@ FVector APathFinder::GetPolygonCentroid(dtPolyRef* Ref) const
 	{
 
 		const int vertIndex = Poly->verts[i];
-		dtReal* V = &Tile->verts[vertIndex * 3];
+		dtTileVert* V = &Tile->verts[vertIndex * 3];
 
 		// Converting From Detour to UE5.
 
-		Center += InvRealToVector(V);
+		Center += InvTileVertToVector(Tile, V);
 
 	}
 

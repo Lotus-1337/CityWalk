@@ -44,7 +44,7 @@ void UCityAISubsystem::OnWorldBeginPlay(UWorld& World)
 void UCityAISubsystem::SpawnAI()
 {
 
-	const int32 MaxSpawnedAIPerFrame = 8;
+	const int32 MaxSpawnedAIPerFrame = 32;
 
 	const int32 MaxAIThisFrame = FMath::Clamp(MaxAI - AIArray.Num(), 0, MaxSpawnedAIPerFrame);
 

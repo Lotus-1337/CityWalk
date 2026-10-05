@@ -6,6 +6,7 @@
 
 struct dtMeshTile;
 struct dtPoly;
+struct dtTileVert;
 
 class dtNavMesh;
 
@@ -119,6 +120,9 @@ FORCEINLINE FVector InvRealToVector(const dtReal* V)
 	return FVector(-V[0], -V[2], V[1]);
 }
 
+
+FVector InvTileVertToVector(const dtMeshTile* Tile, dtTileVert* TV);
+
 /**
 * Use When X and Y Axis Are Inverted.
 * 
@@ -131,6 +135,8 @@ FORCEINLINE void InvVectorToReal(const FVector& V, dtReal Out[3])
 	Out[1] = V.Z;
 	Out[2] = -V.Y;
 }
+
+
 
 UENUM()
 enum class EWhichHandle

@@ -30,7 +30,7 @@ protected:
 	AWalkerCharacter* Player;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	int32 MaxAI = 128;
+	int32 MaxAI = 1024;
 
 	TUniquePtr<FAILODManager> LODManager;
 

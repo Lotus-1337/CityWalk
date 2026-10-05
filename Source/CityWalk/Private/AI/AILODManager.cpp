@@ -6,6 +6,8 @@
 void FAILODManager::ManageAILOD(TArray<AAIActor*>& AIArray, const FVector& PlayerLocation, const int32& MaxProcessedAIPerFrame)
 {
 
+	TRACE_CPUPROFILER_EVENT_SCOPE(FAILODManager::ManageAILOD);
+
 	const int32 AIProcessedThisFrame = FMath::Clamp(AIArray.Num() - ProcessedAI, 0, MaxProcessedAIPerFrame);
 
 	for (int32 i = 0; i < AIProcessedThisFrame; ++i)

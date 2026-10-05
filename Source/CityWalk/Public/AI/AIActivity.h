@@ -50,6 +50,8 @@ public:
 	
 	virtual void OnActivityEnded(AAIActor& AI) override;
 
+	virtual void ExecuteActivity(AAIActor& AI) override;
+
 	/** Checks if the given activity instance is from Idle class **/
 	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_IDLE_ID; }
 
@@ -70,6 +72,8 @@ public:
 	virtual void OnActivityStarted(AAIActor& AI) override;
 
 	virtual void OnActivityEnded(AAIActor& AI) override;
+
+	virtual void ExecuteActivity(AAIActor& AI) override;
 
 	/** Checks if the given activity instance is from Wandering class **/
 	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_WANDERING_ID; }
@@ -92,6 +96,8 @@ public:
 
 	virtual void OnActivityEnded(AAIActor& AI) override;
 
+	virtual void ExecuteActivity(AAIActor& AI) override;
+
 	/** Checks if the given activity instance is from Talking class **/
 	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_TALKING_ID; }
 
@@ -112,6 +118,8 @@ public:
 
 	virtual void OnActivityEnded(AAIActor& AI) override;
 
+	virtual void ExecuteActivity(AAIActor& AI) override;
+
 	/** Checks if the given activity instance is from Working class **/
 	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_WORKING_ID; }
 
@@ -131,6 +139,8 @@ public:
 	virtual void OnActivityStarted(AAIActor& AI) override;
 
 	virtual void OnActivityEnded(AAIActor& AI) override;
+
+	virtual void ExecuteActivity(AAIActor& AI) override;
 
 	/** Checks if the given activity instance is from Walking class **/
 	FORCEINLINE static bool IsActivityThis(const FAIActivity& Act) { return Act.TypeID == UE_WALKING_ID; }

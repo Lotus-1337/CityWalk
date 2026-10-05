@@ -82,6 +82,8 @@ void AAIActor::BeginPlay()
 void AAIActor::Tick(float DeltaTime)
 {
 
+	TRACE_CPUPROFILER_EVENT_SCOPE(AAIActor::Tick);
+
 	Super::Tick(DeltaTime);
 
 	if (!LODComponent->ShouldTickBeExecuted(DeltaTime))
@@ -108,38 +110,9 @@ void AAIActor::Tick(float DeltaTime)
 void AAIActor::MoveAI()
 {
 
-	MoveOnPath();
+	TRACE_CPUPROFILER_EVENT_SCOPE(AAIActor::MoveAI);
 
-	FVector ActorLocation = GetActorLocation();
-
-	double Distance = FVector::DistSquared2D(ActorLocation, Goal);
-
-	constexpr double MaxDistance = FMath::Square(100);
-
-	// Setting the Location to Destination to avoid random movement close to destination. 
-	if (Distance < MaxDistance)
-	{
-		MovementComponent->MovementVector = FVector::ZeroVector;
-
-		FAIActivity* Activity = BehaviourComponent->GetActivity();
-
-		if (!Activity)
-		{
-			BehaviourComponent->SetNewActivity(MakeShared<FIdleActivity>());
-			UE_LOG(LogTemp, Error, TEXT("Activity is nullptr. "));
-			return;
-		}
-
-		if (FTalkingActivity::IsActivityThis(*Activity) || FWorkingActivity::IsActivityThis(*Activity))
-		{
-			Activity->ExecuteActivity(*this);
-			return;
-		}
-
-		Activity->OnActivityEnded(*this);
-	}
-
-	FVector MovementVector = Destination - ActorLocation;
+	FVector MovementVector = Destination - GetActorLocation();
 	MovementVector.Z = 0.0;
 
 	FVector NormalizedVector = MovementVector.GetSafeNormal();
@@ -151,6 +124,31 @@ void AAIActor::MoveAI()
 
 	MovementComponent->Rotate(NewRotation);
 
+	if (MoveOnPath())
+	{
+
+		OnArrivedAtDestination();
+
+	}
+
+}
+
+void AAIActor::OnArrivedAtDestination()
+{
+
+	MovementComponent->MovementVector = FVector::ZeroVector;
+
+	FAIActivity* Activity = BehaviourComponent->GetActivity();
+
+	if (!Activity)
+	{
+		BehaviourComponent->SetNewActivity(MakeShared<FIdleActivity>());
+		UE_LOG(LogTemp, Error, TEXT("Activity is nullptr. "));
+		return;
+	}
+
+	Activity->ExecuteActivity(*this);
+
 }
 
 void AAIActor::SetActivity()
@@ -161,16 +159,6 @@ void AAIActor::SetActivity()
 	// Setting the default Activity
 	BehaviourComponent->SetNewActivity(MakeShared<FWanderingActivity>());
 
-	// GetActivity Ensures Activity is being executed on the actual activity in the Activities Array.
-	FAIActivity* pActivity = BehaviourComponent->GetActivity();
-
-	if (!pActivity)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Activity is nullptr. "));
-		return;
-	}
-
-	pActivity->OnActivityStarted(*this);
 
 }
 
@@ -198,22 +186,19 @@ void AAIActor::FindActivityPoint()
 	Goal = ActivityPoint->GetLocation();
 
 	BehaviourComponent->SetNewActivity(MakeShared<FWalkingActivity>());
-
 	
 
 }
 
 
-double AAIActor::MoveOnPath()
+bool AAIActor::MoveOnPath()
 {
+
+	TRACE_CPUPROFILER_EVENT_SCOPE(AAIActor::MoveOnPath);
+
 	if (DestinationsArray.IsEmpty() || !DestinationsArray.IsValidIndex(DestinationIndex))
 	{
-		return -10;
-	}
-
-	if (!DestinationsArray.IsValidIndex(DestinationIndex + 1)) // MicroOptimsation, no unnecessary Dist2D checking.
-	{
-		return -10;
+		return false;
 	}
 
 	double Distance = FVector::DistSquared2D(GetActorLocation(), Destination);
@@ -222,11 +207,17 @@ double AAIActor::MoveOnPath()
 	if (Distance < MaxDistance)
 	{
 		DestinationIndex++;
+
+		if (DestinationIndex >= DestinationsArray.Num())
+		{
+			return true;
+		}
+
 	}
 
 	Destination = DestinationsArray[DestinationIndex];
 
-	return Distance;
+	return false;
 	
 
 }

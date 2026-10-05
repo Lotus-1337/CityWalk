@@ -129,8 +129,17 @@ void AWalkerCharacter::Move(FVector2D MovementVector)
 		return;
 	}
 
-	AddMovementInput(GetActorForwardVector(), MovementVector.X);
-	AddMovementInput(GetActorRightVector(), MovementVector.Y);
+	FRotator ActorRotation = GetActorRotation();
+
+	ActorRotation.Pitch = 0.0f;
+
+	// GetActorForwardVector() extends to RotateVector(1, 0, 0) which means this code does the same as GetActorForwardVector
+	// The important thing is I'm zeroing the Pitch, so that Player's speed is not dictated by how high / low they look.
+	FVector ForwardVector = ActorRotation.RotateVector(FVector(1.0f, 0.0f, 0.0f));
+	FVector RightVector = ActorRotation.RotateVector(FVector(0.0f, 1.0f, 0.0f));
+
+	AddMovementInput(ForwardVector, MovementVector.X);
+	AddMovementInput(RightVector, MovementVector.Y);
 
 }
 

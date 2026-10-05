@@ -144,7 +144,7 @@ protected:
 	* This Allows Finding PolyNodes by their Refs 
 	*/
 
-	TSparseSet<dtPolyRef, Index_t, FPolyNode> PolySet;
+	FCityWalkContainers::TSparseSet<dtPolyRef, Index_t, FPolyNode> PolySet;
 
 	TArray<FPolyNode*> NodesToClean;
 

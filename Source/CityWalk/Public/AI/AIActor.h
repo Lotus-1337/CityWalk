@@ -74,9 +74,15 @@ protected:
 
 	/*
 	* Method responsible for changing the destination so the most relevant is actively chosen
-	* @returns Distance to Destination. 
+	* @returns Whether AI has finished walking on the Path. 
 	*/
-	double MoveOnPath();
+	bool MoveOnPath();
+
+	/*
+	* Method called when AI arrives at it's destination
+	* Executes Current Activity or continues walking 
+	*/
+	void OnArrivedAtDestination();
 
 public:	
 	// Called every frame
