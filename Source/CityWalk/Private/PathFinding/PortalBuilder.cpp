@@ -29,12 +29,15 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 	}
 
 
+	const dtPoly* MainPoly  = PolyInfo->MainHandle.Poly;
+	const dtPoly* OtherPoly = PolyInfo->OtherHandle.Poly;
+
 	const dtPoly* Neighbour = nullptr;
 
 	for (int i = 0; i < DT_VERTS_PER_POLYGON; i++)
 	{
 
-		unsigned short NeighbourIndex = PolyInfo->MainHandle.Poly->neis[i];
+		unsigned short NeighbourIndex = MainPoly->neis[i];
 
 		if (NeighbourIndex == 0)
 		{
@@ -50,13 +53,13 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 			Neighbour = &PolyInfo->Tile->polys[NeighbourIndex - 1];
 		}
 
-		if (Neighbour != PolyInfo->OtherHandle.Poly)
+		if (Neighbour != OtherPoly)
 		{
 			continue;
 		}
 
-		int32 VertIndex0 = PolyInfo->MainHandle.Poly->verts[i];
-		int32 VertIndex1 = PolyInfo->MainHandle.Poly->verts[(i + 1) % PolyInfo->MainHandle.Poly->vertCount];
+		int32 VertIndex0 = MainPoly->verts[i];
+		int32 VertIndex1 = MainPoly->verts[(i + 1) % MainPoly->vertCount];
 
 		dtTileVert* TV0 = &PolyInfo->Tile->verts[VertIndex0 * 3];
 		dtTileVert* TV1 = &PolyInfo->Tile->verts[VertIndex1 * 3];
@@ -94,14 +97,14 @@ const dtPoly * FPortalBuilder::GetPolyOutsideTile(FPolyInfo* PolyInfo, const int
 
 		const dtLink& Link = PolyInfo->Tile->links[i];
 
+		dtPolyRef Ref = Link.ref;
+
 		// if the edge is not equal to the current iteration of Poly::neis[]
 		// if they're equal then we found the neighbour.
-		if (Link.edge != Index) 
+		if (Ref != PolyInfo->OtherHandle.Ref)
 		{
 			continue;
 		}
-
-		dtPolyRef Ref = Link.ref;
 
 		const dtPoly* Poly = nullptr;
 		const dtMeshTile* Tile = nullptr;

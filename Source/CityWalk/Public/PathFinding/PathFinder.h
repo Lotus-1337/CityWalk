@@ -151,10 +151,16 @@ protected:
 public:
 
 	int32 NeighbourCount = 0;
+
+	dtNavMeshQuery * Query;
+
+	bool IsQueryValid = false;
 	
 public:	
 	// Sets default values for this actor's properties
 	APathFinder();
+
+	~APathFinder();
 
 protected:
 	// Called when the game starts or when spawned
@@ -214,6 +220,8 @@ public:
 	* Calling this method during Pathfinding on another Thread will break the said PathFinding
 	*/
 	void CleanNodes();
+
+	bool InitializeQuery(const dtNavMesh* Mesh = nullptr);
 
 	FORCEINLINE TArray<FPolyNode> GetEmptyArray() const
 	{

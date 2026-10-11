@@ -230,4 +230,6 @@ void UPathFindingSubsystem::CalculateMeshBoundaries()
 	MeshMin = FVector2D(MinX, MinY);
 	MeshMax = FVector2D(MaxX, MaxY);
 
+	PathFinder->InitializeQuery(Mesh);
+
 }

@@ -24,7 +24,7 @@ void FFPSCounter::CalculateFPS(const float& DeltaTime)
 	MaxFPS = FMath::Max(FPS, MaxFPS);
 	MinFPS = FMath::Min(FPS, MinFPS);
 
-	UE_LOG(LogTemp, Log, TEXT("FPS: %f. Average FPS: %f. Min FPS: %f. Max FPS: %f"), FPS, AverageFPS, MinFPS, MaxFPS);
+	//UE_LOG(LogTemp, Log, TEXT("FPS: %f. Average FPS: %f. Min FPS: %f. Max FPS: %f"), FPS, AverageFPS, MinFPS, MaxFPS);
 
 }
 

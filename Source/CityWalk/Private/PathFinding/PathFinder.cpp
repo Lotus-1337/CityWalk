@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "PathFinder.h"
+#include "PathFinding/PathFinder.h"
 
 #include "NavMesh/RecastNavMesh.h"
 #include "NavigationSystem.h"
@@ -10,9 +10,9 @@
 
 #include "Trace/Trace.h"
 
-#include "PortalBuilder.h"
-#include "Portal.h"
-#include "PFHelper.h"
+#include "PathFinding/PortalBuilder.h"
+#include "PathFinding/Portal.h"
+#include "PathFinding/PFHelper.h"
 
 DEFINE_LOG_CATEGORY(LogProfiler);
 
@@ -29,7 +29,19 @@ APathFinder::APathFinder()
 
 	PolySet = FCityWalkContainers::TSparseSet<dtPolyRef, Index_t, FPolyNode>(1024);
 
+	Query = dtAllocNavMeshQuery();
+}
 
+APathFinder::~APathFinder()
+{
+	if (!Query)
+	{
+		return;
+	}
+
+	dtFreeNavMeshQuery(Query);
+
+	Query = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -252,7 +264,7 @@ void APathFinder::ReverseArray(TArray<dtPolyRef>& OutArray)
 
 }
 
-void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, const FVector& Extent)
+void APathFinder::GetClosestPoly(dtPolyRef* Poly, const FVector& Location, const FVector& Extent)
 {
 
 	UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
@@ -271,8 +283,11 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 		return;
 	}
 
-	dtNavMeshQuery Query = dtNavMeshQuery();
-	Query.init(GetDetourMesh(), 2048);
+	if (!InitializeQuery())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Nav Mesh Query is not and cannot be initialized. APathFinder::GetDetourMesh"));
+		return;
+	}
 
 	dtQueryFilter QueryFilter;
 
@@ -285,7 +300,7 @@ void APathFinder::GetClosestPoly(dtPolyRef * Poly, const FVector& Location, cons
 	InvVectorToReal(Location, Center);
 	VectorToReal(Extent, ExtentReal);
 
-	dtStatus Status = Query.findNearestPoly(Center, ExtentReal, &QueryFilter, Poly, NearestPt);
+	dtStatus Status = Query->findNearestPoly(Center, ExtentReal, &QueryFilter, Poly, NearestPt);
 
 	if (!dtStatusSucceed(Status) || *Poly == 0)
 	{
@@ -425,10 +440,7 @@ FPolyNode APathFinder::BuildNode(dtPolyRef& Ref)
 
 dtNavMeshQuery APathFinder::GetNavMeshQuery() const
 {
-	dtNavMeshQuery Query;
-	Query.init(GetDetourMesh(), 2048);
-
-	return Query;
+	return *Query;
 }
 
 FVector APathFinder::GetPolygonCentroid(dtPolyRef* Ref) const
@@ -483,5 +495,19 @@ void APathFinder::CleanNodes()
 	}
 
 	NodesToClean.Reset();
+
+}
+
+bool APathFinder::InitializeQuery(const dtNavMesh* Mesh)
+{
+
+	if (IsQueryValid) return true;
+	if (!Mesh) Mesh = GetDetourMesh();
+	if (!Mesh) return false;
+	if (!Query) return false;
+
+	dtStatus Status = Query->init(Mesh, 2048);
+
+	return IsQueryValid = dtStatusSucceed(Status);
 
 }

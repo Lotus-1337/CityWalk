@@ -2,16 +2,6 @@
 
 #include "CoreMinimal.h"
 
-//template <typename Key>
-//
-//template <class DenseClass>
-//concept Component = requires(DenseClass &D) 
-//{
-//    {
-//        D.GetKey()
-//    } -> std::same_as<Key>;
-//};
-
 // This namespace wasn't necesarry in 5.6 project Version but UE5.8 features it's own TSparseSet
 namespace FCityWalkContainers
 {

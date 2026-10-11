@@ -56,7 +56,9 @@ protected:
 	/** Object responsible for building Funneled Paths **/
 	TUniquePtr<FFunnel> Funnel;
 
-	TQueue<FPathRequest> AIQueue;FTimerHandle PFTimerHandle;
+	TQueue<FPathRequest> AIQueue;
+	
+	FTimerHandle PFTimerHandle;
 
 public:
 
