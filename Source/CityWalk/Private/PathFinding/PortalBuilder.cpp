@@ -67,7 +67,7 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 		FVector V0 = InvTileVertToVector(PolyInfo->Tile, TV0); // Inverted Conversions are useful here too
 		FVector V1 = InvTileVertToVector(PolyInfo->Tile, TV1);
 
-		return FPortal(V1, V0);
+		return FPortal(V0, V1);
 
 
 	}

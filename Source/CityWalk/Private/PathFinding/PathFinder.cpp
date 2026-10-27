@@ -42,6 +42,7 @@ APathFinder::~APathFinder()
 	dtFreeNavMeshQuery(Query);
 
 	Query = nullptr;
+
 }
 
 // Called when the game starts or when spawned
