@@ -49,11 +49,15 @@ AAIActor::AAIActor()
 }
 
 static int32 BenchmarkIndex = 1;
+static int32 FailedBenchmarks = 0;
 
 // Called when the game starts or when spawned
 void AAIActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	BenchmarkIndex = 1;
+	FailedBenchmarks = 0;
 
 	UAIVisualSubsystem* VisualSubsystem = GetWorld()->GetSubsystem<UAIVisualSubsystem>();
 
@@ -75,7 +79,9 @@ void AAIActor::BeginPlay()
 
 	FindActivityPoint();
 
-
+	//	Uncomment only when Benchmarking PathFinding. Never uncomment in shipping builds. 
+	//  ScheduleBenchmark();
+	
 }
 
 // Called every frame
@@ -264,6 +270,10 @@ void AAIActor::BenchmarkPathFinding(const FVector& StartLocation, const FVector&
 
 		BenchmarkDuration += FTimers::MicroSeconds(Duration);
 	}
+	else
+	{
+		FailedBenchmarks++;
+	}
 
 	UE_LOG(LogBenchmark, Log, TEXT("Benchmark %d Finished. Duration in MicroSeconds: %f. VisitedNodes: %d"), BenchmarkIndex, FTimers::MicroSeconds(Duration), PFSubsystem->GetVisitedNodes());
 
@@ -296,7 +306,12 @@ void AAIActor::RunBenchmark()
 	if (BenchmarkIndex >= MaxBenchmarks)
 	{
 
-		UE_LOG(LogBenchmark, Warning, TEXT("Just Ran %d Benchmarks: Here's the performance: "), BenchmarkIndex);
+		float TotalBenchmarks = BenchmarkIndex + FailedBenchmarks;
+		UE_LOG(LogBenchmark, Warning, TEXT("Just Ran %d Benchmarks: "), BenchmarkIndex);
+
+		float FailedPercentage = (FailedBenchmarks * 100) / TotalBenchmarks;
+		UE_LOG(LogBenchmark, Log, TEXT("Failed Benchmarks: %d. Failed Benchmarks Percentage: %f Percent"), FailedBenchmarks, FailedPercentage);
+
 		UE_LOG(LogBenchmark, Log, TEXT("Total Benchmarks Duration: %f. Average Benchmark Duration: %f"), BenchmarkDuration, BenchmarkDuration / BenchmarkIndex);
 
 		PFSubsystem->BenchmarksArray.Sort();

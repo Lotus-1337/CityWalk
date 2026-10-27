@@ -89,6 +89,7 @@ bool UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVecto
 	if (PolyArr.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PathFinding from %s to %s didn't return anything. "), *StartLocation.ToString(), *GoalLocation.ToString());
+		PathFinder->CleanNodes();
 		return false;
 	}
 
@@ -105,6 +106,7 @@ bool UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVecto
 	if (PortalArray.IsEmpty() || !DidBuilderSucceed)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Portal Builder didn't return anything. Empty: %d. Returned: %d"), PortalArray.IsEmpty(), DidBuilderSucceed);
+		PathFinder->CleanNodes();
 		return false;
 	}
 
