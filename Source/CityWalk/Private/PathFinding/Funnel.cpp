@@ -70,18 +70,26 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 
 		if (RightStatus == EFunnelAddStatus::INTERSECTING)
 		{
-			OutArray.Add(Apex);
-
 			ApexIndex = LeftIndex;
 
 			Apex = LeftBoundary;
-			i = FMath::Max(1, ApexIndex - 1);
+
+			OutArray.Add(Apex);
+
+			LeftIndex = ApexIndex;
+			RightIndex = ApexIndex;
+
+			LeftBoundary = Apex;
+			RightBoundary = Apex;
+
+			i = FMath::Max(1, ApexIndex);
 
 			continue;
 
 		}
 		else if (RightStatus == EFunnelAddStatus::NARROWING)
 		{
+			RightBoundary = CurrentPortal.Right;
 			RightIndex = i;
 		}
 
@@ -91,15 +99,24 @@ bool FFunnel::BuildFunnelPath(TArray<FVector>& OutArray, TArray<FPortal>& InArra
 
 		if (LeftStatus == EFunnelAddStatus::INTERSECTING)
 		{
+			ApexIndex = RightIndex;
+			Apex = RightBoundary;
+
 			OutArray.Add(Apex);
 
-			ApexIndex = RightIndex;
+			RightIndex = ApexIndex;
+			LeftIndex = ApexIndex;
 
-			Apex = RightBoundary;
-			i = FMath::Max(1, ApexIndex - 1);
+			RightBoundary = Apex;
+			LeftBoundary = Apex;
+
+			i = FMath::Max(1, ApexIndex );
+
+			continue;
 		}
 		else if (LeftStatus == EFunnelAddStatus::NARROWING)
 		{
+			LeftBoundary = CurrentPortal.Left;
 			LeftIndex = i;
 		}
 
@@ -122,11 +139,9 @@ EFunnelAddStatus FFunnel::AddLeft(FVector& Apex, FVector& LeftBoundary, const FV
 
 	if (IsIntersecting)
 	{
-		Apex = RightBoundary;
 		return EFunnelAddStatus::INTERSECTING;
 	}
 
-	LeftBoundary = NewLeftPoint;
 	return EFunnelAddStatus::NARROWING;
 
 }
@@ -142,11 +157,9 @@ EFunnelAddStatus FFunnel::AddRight(FVector& Apex, FVector& RightBoundary, const 
 
 	if (IsIntersecting)
 	{
-		Apex = LeftBoundary;
 		return EFunnelAddStatus::INTERSECTING;
 	}
 
-	RightBoundary = NewRightPoint;
 	return EFunnelAddStatus::NARROWING;
 
 }

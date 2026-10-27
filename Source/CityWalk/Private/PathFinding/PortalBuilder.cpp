@@ -34,7 +34,7 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 
 	const dtPoly* Neighbour = nullptr;
 
-	for (int i = 0; i < DT_VERTS_PER_POLYGON; i++)
+	for (int i = 0; i < MainPoly->vertCount; i++)
 	{
 
 		unsigned short NeighbourIndex = MainPoly->neis[i];
@@ -46,7 +46,7 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 
 		if (NeighbourIndex & DT_EXT_LINK) // is the neighbour index outside of current tile? more expensive calculations
 		{
-			Neighbour = FPortalBuilder::GetPolyOutsideTile(PolyInfo, i);
+			Neighbour = FPortalBuilder::GetPolyOutsideTile(PolyInfo);
 		}
 		else
 		{
@@ -61,8 +61,8 @@ FPortal FPortalBuilder::BuildPortal(FPolyInfo* PolyInfo)
 		int32 VertIndex0 = MainPoly->verts[i];
 		int32 VertIndex1 = MainPoly->verts[(i + 1) % MainPoly->vertCount];
 
-		dtTileVert* TV0 = &PolyInfo->Tile->verts[VertIndex0 * 3];
-		dtTileVert* TV1 = &PolyInfo->Tile->verts[VertIndex1 * 3];
+		dtTileVert* TV0 = &PolyInfo->Tile->verts[VertIndex0];
+		dtTileVert* TV1 = &PolyInfo->Tile->verts[VertIndex1];
 
 		FVector V0 = InvTileVertToVector(PolyInfo->Tile, TV0); // Inverted Conversions are useful here too
 		FVector V1 = InvTileVertToVector(PolyInfo->Tile, TV1);
@@ -120,6 +120,60 @@ const dtPoly * FPortalBuilder::GetPolyOutsideTile(FPolyInfo* PolyInfo, const int
 	return nullptr;
 
 }
+
+const dtPoly* FPortalBuilder::GetPolyOutsideTile(FPolyInfo* PolyInfo)
+{
+
+	if (!ValidatePolyInfo(PolyInfo, false))
+	{
+		UE_LOG(LogTemp, Error, TEXT("PolyInfo IsInvalid. FPortalBuilder::GetPolyOutsideTile"));
+		return nullptr;
+	}
+	if (!PolyInfo->Tile->header)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Tile Header Is Invalid. FPortalBuilder::GetPolyOutsideTile"));
+		return nullptr;
+	}
+
+	dtPolyRef GoalRef = PolyInfo->OtherHandle.Ref;
+
+	if (GoalRef == 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Goal Ref is invalid. FPortalBuilder::GetPolyOutsideTile"));
+		return nullptr;
+	}
+
+	for (unsigned int i = PolyInfo->MainHandle.Poly->firstLink; i != DT_NULL_LINK; i = PolyInfo->Tile->links[i].next)
+	{
+
+		const dtLink& Link = PolyInfo->Tile->links[i];
+
+		dtPolyRef Ref = Link.ref;
+
+		// if the edge is not equal to the current iteration of Poly::neis[]
+		// if they're equal then we found the neighbour.
+		if (Ref != GoalRef)
+		{
+			continue;
+		}
+
+		const dtPoly* Poly = nullptr;
+		const dtMeshTile* Tile = nullptr;
+
+		PolyInfo->Mesh->getTileAndPolyByRef(Ref, &Tile, &Poly);
+
+		return Poly;
+
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("The Said Neighbour of Ref: %llu Has not been Found. FPortalBuilder::GetPolyOutsideTile"), GoalRef);
+
+	return nullptr;
+
+}
+
+
+
 
 const dtPolyRef FPortalBuilder::GetRefOutsideTile(const FPolyInfo* PolyInfo, const int32& Index)
 {

@@ -45,6 +45,19 @@ public:
 	/**
 	* If the neighbour is outside the current tile, it's searched in other tiles
 	* 
+	* This method of searching for the Poly is significantly slower
+	*
+	* This Particular version searches for the poly by looking for Ref and then finds Poly
+	* 
+	* @param PolyInfo: Structure containing Tile and 2 Poly Handles necessary for getting the Neighbour by dtPoly::links
+	*
+	* @return Neighbouring Poly if Found
+	*/
+	static const dtPoly* GetPolyOutsideTile(FPolyInfo* PolyInfo);
+
+	/**
+	* If the neighbour is outside the current tile, it's searched in other tiles
+	* 
 	* This Version Returns Neighbour's Ref
 	*
 	* This method of searching for the Poly is significantly slower
