@@ -77,7 +77,7 @@ const dtNavMesh* APathFinder::GetDetourMesh() const
 
 }
 
-bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
+PFStatus APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& StartingPosition, const FVector& FinishPosition)
 {
 
 	OutArray.Reset();
@@ -107,7 +107,7 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 	if (!IsStartValid || !IsEndValid)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Start ( %d ) or End ( %d ) Poly is 0 ( invalid ). "), IsStartValid, IsEndValid);
-		return false;
+		return PFStatus_OtherFailed;
 	}
 
 	FPolyNode StartNode;
@@ -157,7 +157,8 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 		if (CurrentNode->Ref == EndNode->Ref)
 		{
-			return ReconstructPath(OutArray, CurrentNode);
+			ReconstructPath(OutArray, CurrentNode);
+			return PFStatus_Succeeded;
 		}
 
 		CurrentNode->IsInOpen = false;
@@ -216,11 +217,11 @@ bool APathFinder::FindPath(TArray<dtPolyRef> & OutArray, const FVector& Starting
 
 	}
 
-	return false;
+	return PFStatus_PFFailed;
 
 }
 
-bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* LastNode)
+void APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* LastNode)
 {
 
 	const FPolyNode* CurrNode = LastNode;
@@ -236,8 +237,6 @@ bool APathFinder::ReconstructPath(TArray<dtPolyRef>& OutArray, const FPolyNode* 
 	}
 
 	ReverseArray(OutArray);
-	
-	return true;
 
 }
 

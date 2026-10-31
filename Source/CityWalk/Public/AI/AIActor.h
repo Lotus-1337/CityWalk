@@ -97,6 +97,8 @@ public:
 
 	void SetActivity();
 
+	void SetDefaultActivity();
+
 	/**
 	* Method Benchmarking PathFinding and outputting Time Duration
 	* 

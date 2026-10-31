@@ -29,3 +29,6 @@ Draw Calls Went from ~1900 - 2000 to ~300 - 400. 82% Less.
 Draw Thread Time went from 14.7 to 7.5 ms. 49% Less.
 
 ## Mesh Atlasing gave a 44% Higher Average FPS and 26% Higher Max FPS
+
+Average Benchmark Duration With initializing query 2 every PF: 34.8 ms
+Average Benchmark Duration With initializing query once at the beggining: 34.8 ms

@@ -13,6 +13,8 @@ class FFunnel;
 
 class dtNavMesh;
 
+typedef uint8 PFStatus;
+
 USTRUCT()
 struct FPathRequest
 {
@@ -43,6 +45,9 @@ class CITYWALK_API UPathFindingSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 	
 protected:
+
+	UPROPERTY(VisibleAnywhere, Category = "Validation")
+	bool IsInitialized = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Path Finder")
 	TSubclassOf<APathFinder> PathFinderClass;
@@ -90,33 +95,11 @@ public:
 	/**
 	* Finds the most optimal Path from AI's Location to Goal
 	*
-	* @param AI: AI's location is used to find the path to goal
-	*
 	* @param Arr: Array of points on the Path
 	*
 	* @returns Whether PathFinding was successfull
 	*/
-	bool FindPathAI(AAIActor* AI, TArray<FVector>* Arr, const FVector& GoalLocation);
-
-	/**
-	* Finds the most optimal Path from AI's Location to Goal
-	*
-	* @param Arr: Array of points on the Path
-	*
-	* @returns Whether PathFinding was successfull
-	*/
-	bool FindPath(const FVector& StartLocation, TArray<FVector>& Arr, const FVector& GoalLocation);
-
-	/**
-	* Finds The most optimal Path from AI's Location to Goal
-	*
-	* @param AI: AI's location is used to find the path to goal
-	*
-	* @param Arr: Array of points on the Path
-	*
-	* @returns Time PathFinding took measured in seconds
-	*/
-	double FindPathAITimered(AAIActor* AI, TArray<FVector>* Arr, const FVector& GoalLocation);
+	PFStatus FindPath(const FVector& StartLocation, TArray<FVector>& Arr, const FVector& GoalLocation);
 
 	/**
 	* Finds The most optimal Path from AI's Location to Goal
@@ -130,6 +113,11 @@ public:
 	int32 GetVisitedNodes() const;
 
 	const dtNavMesh* GetNavMesh() const;
+
+	/**
+	* Initializes Pathfinding by Calculating Mesh Boundaries and Initializing Pathfinder's Query
+	*/
+	void InitializePathFinding();
 
 	void CalculateMeshBoundaries();
 

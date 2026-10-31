@@ -19,6 +19,8 @@ typedef UEType_uint64 dtPolyRef;
 
 typedef int32 Index_t;
 
+typedef uint8 PFStatus;
+
 DECLARE_LOG_CATEGORY_EXTERN(LogProfiler, Log, Log);
 
 USTRUCT()
@@ -183,9 +185,8 @@ protected:
 	* @param OutArray: Outputs Reconstructed Path to the Array
 	* @param LastNode: The Last Node found in PathFinding Algorithm
 	* 
-	* @returns The success of the Operation
 	*/
-	bool ReconstructPath(TArray<dtPolyRef> & OutArray, const FPolyNode* LastNode);
+	void ReconstructPath(TArray<dtPolyRef> & OutArray, const FPolyNode* LastNode);
 
 	/**
 	* Neccesary for APathFinder::ReconstructPath()
@@ -211,9 +212,9 @@ public:
 	* Finds A Corridor of Polys From Starting Position to The Finish Position
 	* Uses A* PathFinding Algorithm
 	*
-	* @returns An Array of Polys
+	* @returns Status of Pathfinding Algorithm
 	*/
-	bool FindPath(TArray<dtPolyRef>& OutArray, const FVector& StartingPosition, const FVector& FinishPosition);
+	PFStatus FindPath(TArray<dtPolyRef>& OutArray, const FVector& StartingPosition, const FVector& FinishPosition);
 
 	/**
 	* Cleans An Array of Used Nodes.

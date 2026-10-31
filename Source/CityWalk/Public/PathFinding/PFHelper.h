@@ -147,3 +147,26 @@ enum class EWhichHandle
 
 /** Returns Poly Ref From PolyInfo's MainHandle Poly **/
 dtPolyRef GetPolyRef(const FPolyInfo& PolyInfo, const EWhichHandle& Handle);
+
+// PF STATUS
+
+typedef uint8 PFStatus;
+
+static const PFStatus PFStatus_Succeeded = 1u << 7;
+static const PFStatus PFStatus_PFFailed = 1u << 6;
+static const PFStatus PFStatus_PBFailed = 1u << 5;
+static const PFStatus PFStatus_FunnelFailed = 1u << 4;
+static const PFStatus PFStatus_OtherFailed = 1u;
+
+
+FORCEINLINE constexpr bool PFStatus_DidSucceed(const PFStatus& Status) { return Status == PFStatus_Succeeded; }
+
+FORCEINLINE constexpr bool PFStatus_DidFail(const PFStatus& Status) { return !PFStatus_DidSucceed(Status); }
+
+FORCEINLINE constexpr bool PFStatus_DidPFFail(const PFStatus& Status) { return (Status & PFStatus_PFFailed) != 0; }
+
+FORCEINLINE constexpr bool PFStatus_DidPBFail(const PFStatus& Status) { return (Status & PFStatus_PBFailed) != 0; }
+
+FORCEINLINE constexpr bool PFStatus_DidFunnelFail(const PFStatus& Status) { return (Status & PFStatus_FunnelFailed) != 0; }
+
+FORCEINLINE constexpr bool PFStatus_DidOtherFail(const PFStatus& Status) { return (Status & PFStatus_OtherFailed) != 0; }

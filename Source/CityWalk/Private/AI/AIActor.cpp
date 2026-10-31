@@ -157,7 +157,7 @@ void AAIActor::OnArrivedAtDestination()
 
 }
 
-void AAIActor::SetActivity()
+void AAIActor::SetDefaultActivity()
 {
 
 	SetActorTickEnabled(true);
@@ -183,7 +183,7 @@ void AAIActor::FindActivityPoint()
 
 	if (!ActivityPoint)
 	{
-		SetActivity();
+		SetDefaultActivity();
 		return;
 	}
 

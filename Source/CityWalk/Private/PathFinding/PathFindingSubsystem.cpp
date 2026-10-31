@@ -3,11 +3,12 @@
 
 #include "PathFindingSubsystem.h"
 
-#include "AIActor.h"
-#include "PathFinder.h"
-#include "PortalBuilder.h"
-#include "Portal.h"
-#include "Funnel.h"
+#include "AI/AIActor.h"
+#include "PathFinding/PathFinder.h"
+#include "PathFinding/PortalBuilder.h"
+#include "PathFinding/Portal.h"
+#include "PathFinding/Funnel.h"
+#include "PathFinding/PFHelper.h"
 
 #include "Detour/DetourNavMesh.h"
 
@@ -38,7 +39,7 @@ void UPathFindingSubsystem::OnWorldBeginPlay(UWorld& World)
 
 	FTimerManager TimerManager;
 
-	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UPathFindingSubsystem::CalculateMeshBoundaries);
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UPathFindingSubsystem::InitializePathFinding);
 
 	SchedulePathFinding();
 
@@ -61,7 +62,13 @@ void UPathFindingSubsystem::ProcessPathFinding()
 
 		AAIActor* AI = Request.AI;
 
-		FindPathAI(AI, &AI->DestinationsArray, Request.Goal);
+		PFStatus Status = FindPath(AI->GetActorLocation(), AI->DestinationsArray, Request.Goal);
+
+		// Sets AI's new activity to default
+		if (PFStatus_DidFail(Status))
+		{
+			AI->SetDefaultActivity();
+		}
 
 		AI->OnFoundNewPath();
 
@@ -73,12 +80,18 @@ void UPathFindingSubsystem::ProcessPathFinding()
 }
 
 
-bool UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVector>& Arr, const FVector& GoalLocation)
+PFStatus UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVector>& Arr, const FVector& GoalLocation)
 {
 	if (!PathFinder)
 	{
 		UE_LOG(LogTemp, Error, TEXT("PathFinder is invalid. UPathFindingSubsystem::FindPath"));
-		return false;
+		return PFStatus_OtherFailed;
+	}
+
+	if (!IsInitialized)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Subsystem Is not fully initialized. UPathFindingSubsystem::FindPath was called too early. "));
+		return PFStatus_OtherFailed;
 	}
 
 	TArray<dtPolyRef> PolyArr;
@@ -90,7 +103,7 @@ bool UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVecto
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PathFinding from %s to %s didn't return anything. "), *StartLocation.ToString(), *GoalLocation.ToString());
 		PathFinder->CleanNodes();
-		return false;
+		return PFStatus_PFFailed;
 	}
 
 
@@ -107,64 +120,30 @@ bool UPathFindingSubsystem::FindPath(const FVector& StartLocation, TArray<FVecto
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Portal Builder didn't return anything. Empty: %d. Returned: %d"), PortalArray.IsEmpty(), DidBuilderSucceed);
 		PathFinder->CleanNodes();
-		return false;
+		return PFStatus_PBFailed;
 	}
 
 	Funnel->BuildFunnelPath(Arr, PortalArray);
 
 	PathFinder->CleanNodes();
 
-	return !Arr.IsEmpty();
+	return !Arr.IsEmpty() ? PFStatus_Succeeded : PFStatus_FunnelFailed;
 }
 
-bool UPathFindingSubsystem::FindPathAI(AAIActor* AI, TArray<FVector>* Arr, const FVector& GoalLocation)
-{
-
-	if (!AI)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AI is invalid. UPathFindingSubsystem::FindPath"));
-		return false;
-	}
-
-	if (!FindPath(AI->GetActorLocation(), *Arr, GoalLocation))
-	{
-		return false;
-	}
-
-	AI->OnFoundNewPath();
-
-	return true;
-
-}
 
 
 double UPathFindingSubsystem::FindPathTimered(const FVector& StartLocation, TArray<FVector>& Arr, const FVector& GoalLocation)
 {
 	double Start = FPlatformTime::Seconds();
 
-	if (FindPath(StartLocation, Arr, GoalLocation))
-	{
-		double Duration = FPlatformTime::Seconds() - Start;
-		BenchmarksArray.Add(Duration);
-		return Duration; // returns time of pathfinding if it succeeded
-	}
 
-	return -1.0;
-}
+	PFStatus Status = FindPath(StartLocation, Arr, GoalLocation);
 
-double UPathFindingSubsystem::FindPathAITimered(AAIActor* AI, TArray<FVector>* Arr, const FVector& GoalLocation)
-{
+	if (PFStatus_DidFail(Status)) return -1.0;
 
-	double Start = FPlatformTime::Seconds();
-
-	if (FindPathAI(AI, Arr, GoalLocation))
-	{
-		double Duration = FPlatformTime::Seconds() - Start;
-		BenchmarksArray.Add(Duration);
-		return Duration; // returns time of pathfinding if it succeeded
-	}
-
-	return -1.0;
+	double Duration = FPlatformTime::Seconds() - Start;
+	BenchmarksArray.Add(Duration);
+	return Duration; // returns time of pathfinding if it succeeded
 
 }
 
@@ -179,6 +158,19 @@ const dtNavMesh* UPathFindingSubsystem::GetNavMesh() const
 
 	return PathFinder == nullptr ? nullptr : PathFinder->GetDetourMesh();
 
+}
+
+void UPathFindingSubsystem::InitializePathFinding()
+{
+	if (IsInitialized)
+	{
+		return;
+	}
+
+	CalculateMeshBoundaries();
+	PathFinder->InitializeQuery(GetNavMesh());
+
+	IsInitialized = true;
 }
 
 void UPathFindingSubsystem::CalculateMeshBoundaries()
@@ -231,7 +223,5 @@ void UPathFindingSubsystem::CalculateMeshBoundaries()
 
 	MeshMin = FVector2D(MinX, MinY);
 	MeshMax = FVector2D(MaxX, MaxY);
-
-	PathFinder->InitializeQuery(Mesh);
 
 }
